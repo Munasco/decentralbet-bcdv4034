@@ -4,23 +4,47 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
+  /* Base System Colors */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-  --color-sidebar-ring: var(--sidebar-ring);
-  --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar: var(--sidebar);
-  --color-chart-5: var(--chart-5);
-  --color-chart-4: var(--chart-4);
-  --color-chart-3: var(--chart-3);
-  --color-chart-2: var(--chart-2);
+  
+  /* Brand Color System */
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-success-muted: var(--success-muted);
+  --color-error: var(--error);
+  --color-error-foreground: var(--error-foreground);
+  --color-error-muted: var(--error-muted);
+  --color-info: var(--info);
+  --color-info-foreground: var(--info-foreground);
+  --color-info-muted: var(--info-muted);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-warning-muted: var(--warning-muted);
+  
+  /* Gray Scale System */
+  --color-gray-50: var(--gray-50);
+  --color-gray-100: var(--gray-100);
+  --color-gray-200: var(--gray-200);
+  --color-gray-300: var(--gray-300);
+  --color-gray-400: var(--gray-400);
+  --color-gray-500: var(--gray-500);
+  --color-gray-600: var(--gray-600);
+  --color-gray-700: var(--gray-700);
+  --color-gray-800: var(--gray-800);
+  --color-gray-900: var(--gray-900);
+  --color-gray-950: var(--gray-950);
+  
+  /* Chart Colors */
   --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  
+  /* UI System Colors */
   --color-ring: var(--ring);
   --color-input: var(--input);
   --color-border: var(--border);
@@ -37,6 +61,18 @@
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
+  
+  /* Sidebar Colors */
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  
+  /* Border Radius */
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -45,6 +81,8 @@
 
 :root {
   --radius: 0.625rem;
+  
+  /* Base System Colors */
   --background: oklch(1 0 0);
   --foreground: oklch(0.141 0.005 285.823);
   --card: oklch(1 0 0);
@@ -63,11 +101,42 @@
   --border: oklch(0.92 0.004 286.32);
   --input: oklch(0.92 0.004 286.32);
   --ring: oklch(0.705 0.015 286.067);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
+  
+  /* Brand Color System - Light Mode */
+  --success: #22c55e; /* Green-500 equivalent */
+  --success-foreground: #ffffff;
+  --success-muted: #dcfce7; /* Green-100 equivalent */
+  --error: #ef4444; /* Red-500 equivalent */
+  --error-foreground: #ffffff;
+  --error-muted: #fee2e2; /* Red-100 equivalent */
+  --info: #3b82f6; /* Light Blue-500 for chart segmentation */
+  --info-foreground: #ffffff;
+  --info-muted: #dbeafe; /* Blue-100 equivalent */
+  --warning: #f59e0b; /* Amber-500 equivalent */
+  --warning-foreground: #ffffff;
+  --warning-muted: #fef3c7; /* Amber-100 equivalent */
+  
+  /* Consistent Gray Scale */
+  --gray-50: #f9fafb;
+  --gray-100: #f3f4f6;
+  --gray-200: #e5e7eb;
+  --gray-300: #d1d5db;
+  --gray-400: #9ca3af;
+  --gray-500: #6b7280;
+  --gray-600: #4b5563;
+  --gray-700: #374151;
+  --gray-800: #1f2937;
+  --gray-900: #111827;
+  --gray-950: #030712;
+  
+  /* Chart Colors - Keep light blue for time segmentation */
+  --chart-1: oklch(0.646 0.222 41.116); /* Keep existing orange */
+  --chart-2: #3b82f6; /* Light blue for time segments */
+  --chart-3: #22c55e; /* Green for positive trends */
+  --chart-4: #ef4444; /* Red for negative trends */
+  --chart-5: #f59e0b; /* Amber for warnings */
+  
+  /* Sidebar Colors */
   --sidebar: oklch(0.985 0 0);
   --sidebar-foreground: oklch(0.141 0.005 285.823);
   --sidebar-primary: oklch(0.21 0.006 285.885);
@@ -79,6 +148,7 @@
 }
 
 .dark {
+  /* Base System Colors - Dark Mode */
   --background: oklch(0.141 0.005 285.823);
   --foreground: oklch(0.985 0 0);
   --card: oklch(0.21 0.006 285.885);
@@ -97,11 +167,42 @@
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 15%);
   --ring: oklch(0.552 0.016 285.938);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
+  
+  /* Brand Color System - Dark Mode */
+  --success: #16a34a; /* Green-600 for better dark contrast */
+  --success-foreground: #ffffff;
+  --success-muted: #15803d; /* Green-700 for dark backgrounds */
+  --error: #dc2626; /* Red-600 for better dark contrast */
+  --error-foreground: #ffffff;
+  --error-muted: #b91c1c; /* Red-700 for dark backgrounds */
+  --info: #2563eb; /* Blue-600 for chart segmentation in dark */
+  --info-foreground: #ffffff;
+  --info-muted: #1d4ed8; /* Blue-700 for dark backgrounds */
+  --warning: #d97706; /* Amber-600 for better dark contrast */
+  --warning-foreground: #ffffff;
+  --warning-muted: #b45309; /* Amber-700 for dark backgrounds */
+  
+  /* Dark Mode Gray Scale */
+  --gray-50: #030712;
+  --gray-100: #111827;
+  --gray-200: #1f2937;
+  --gray-300: #374151;
+  --gray-400: #4b5563;
+  --gray-500: #6b7280;
+  --gray-600: #9ca3af;
+  --gray-700: #d1d5db;
+  --gray-800: #e5e7eb;
+  --gray-900: #f3f4f6;
+  --gray-950: #f9fafb;
+  
+  /* Chart Colors - Dark Mode Optimized */
+  --chart-1: oklch(0.646 0.222 41.116); /* Keep existing orange */
+  --chart-2: #2563eb; /* Darker blue for time segments */
+  --chart-3: #16a34a; /* Darker green for positive trends */
+  --chart-4: #dc2626; /* Darker red for negative trends */
+  --chart-5: #d97706; /* Darker amber for warnings */
+  
+  /* Sidebar Colors - Dark Mode */
   --sidebar: oklch(0.21 0.006 285.885);
   --sidebar-foreground: oklch(0.985 0 0);
   --sidebar-primary: oklch(0.488 0.243 264.376);
@@ -119,4 +220,71 @@
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/* Brand Color Utility Classes */
+@layer utilities {
+  /* Success Colors (Green) */
+  .text-success { color: var(--success); }
+  .bg-success { background-color: var(--success); }
+  .border-success { border-color: var(--success); }
+  .text-success-foreground { color: var(--success-foreground); }
+  .bg-success-muted { background-color: var(--success-muted); }
+  
+  /* Error Colors (Red) */
+  .text-error { color: var(--error); }
+  .bg-error { background-color: var(--error); }
+  .border-error { border-color: var(--error); }
+  .text-error-foreground { color: var(--error-foreground); }
+  .bg-error-muted { background-color: var(--error-muted); }
+  
+  /* Info Colors (Light Blue) */
+  .text-info { color: var(--info); }
+  .bg-info { background-color: var(--info); }
+  .border-info { border-color: var(--info); }
+  .text-info-foreground { color: var(--info-foreground); }
+  .bg-info-muted { background-color: var(--info-muted); }
+  
+  /* Warning Colors (Amber) */
+  .text-warning { color: var(--warning); }
+  .bg-warning { background-color: var(--warning); }
+  .border-warning { border-color: var(--warning); }
+  .text-warning-foreground { color: var(--warning-foreground); }
+  .bg-warning-muted { background-color: var(--warning-muted); }
+  
+  /* Brand Gray Scale */
+  .text-brand-gray-50 { color: var(--gray-50); }
+  .text-brand-gray-100 { color: var(--gray-100); }
+  .text-brand-gray-200 { color: var(--gray-200); }
+  .text-brand-gray-300 { color: var(--gray-300); }
+  .text-brand-gray-400 { color: var(--gray-400); }
+  .text-brand-gray-500 { color: var(--gray-500); }
+  .text-brand-gray-600 { color: var(--gray-600); }
+  .text-brand-gray-700 { color: var(--gray-700); }
+  .text-brand-gray-800 { color: var(--gray-800); }
+  .text-brand-gray-900 { color: var(--gray-900); }
+  .text-brand-gray-950 { color: var(--gray-950); }
+  
+  .bg-brand-gray-50 { background-color: var(--gray-50); }
+  .bg-brand-gray-100 { background-color: var(--gray-100); }
+  .bg-brand-gray-200 { background-color: var(--gray-200); }
+  .bg-brand-gray-300 { background-color: var(--gray-300); }
+  .bg-brand-gray-400 { background-color: var(--gray-400); }
+  .bg-brand-gray-500 { background-color: var(--gray-500); }
+  .bg-brand-gray-600 { background-color: var(--gray-600); }
+  .bg-brand-gray-700 { background-color: var(--gray-700); }
+  .bg-brand-gray-800 { background-color: var(--gray-800); }
+  .bg-brand-gray-900 { background-color: var(--gray-900); }
+  .bg-brand-gray-950 { background-color: var(--gray-950); }
+  
+  /* Hover States */
+  .hover\:bg-success:hover { background-color: var(--success); }
+  .hover\:bg-error:hover { background-color: var(--error); }
+  .hover\:bg-info:hover { background-color: var(--info); }
+  .hover\:bg-warning:hover { background-color: var(--warning); }
+  
+  .hover\:text-success:hover { color: var(--success); }
+  .hover\:text-error:hover { color: var(--error); }
+  .hover\:text-info:hover { color: var(--info); }
+  .hover\:text-warning:hover { color: var(--warning); }
 }
