@@ -12,6 +12,7 @@ import { TradingPanel } from '@/components/trading/TradingPanel'
 import OrderBook from '@/components/trading/OrderBook'
 import MarketStats from '@/components/trading/MarketStats'
 import Navbar from '@/components/layout/Navbar'
+import Comments from '@/components/events/Comments'
 import toast from 'react-hot-toast'
 import { useTokenBalance, usePlaceBet, useTokenAllowance, useTokenApproval } from '@/hooks/usePredictionMarket'
 import { parseUSDC } from '@/lib/decimals'
@@ -258,6 +259,11 @@ export default function EventPage({ params }: EventsPageProps) {
             />
             <OrderBook yesPrice={pricing.yesPrice * 100} noPrice={pricing.noPrice * 100} />
           </div>
+        </div>
+        
+        {/* Comments Section - Full width below main content */}
+        <div className="mt-8">
+          <Comments />
         </div>
       </div>
     </div>
