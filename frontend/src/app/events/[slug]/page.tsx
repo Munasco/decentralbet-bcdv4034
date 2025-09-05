@@ -102,11 +102,7 @@ export default function EventPage({ params }: EventsPageProps) {
   const { placeBet, isLoading: isBetting } = usePlaceBet(() => {
     setIsProcessingBet(false)
     setPendingBet(null)
-    
-    // Refresh all data after successful bet
-    setTimeout(() => {
-      window.location.reload() // For now, we'll use reload to ensure fresh data
-    }, 1500) // Give time for blockchain to update
+    router.refresh()
   })
   
   const handlePlaceBet = async (outcome: 'yes' | 'no', amount: string) => {
@@ -245,6 +241,7 @@ export default function EventPage({ params }: EventsPageProps) {
             </div>
 
             <MarketStats 
+              marketId={Number(id)}
               marketData={{ totalVolume, yesShares, noShares, endTime: BigInt(endTime), isResolved, creator }}
               pricing={pricing}
             />
@@ -257,7 +254,7 @@ export default function EventPage({ params }: EventsPageProps) {
               onPlaceBet={handlePlaceBet}
               isLoading={isProcessingBet || isApproving || isBetting}
             />
-            <OrderBook yesPrice={pricing.yesPrice * 100} noPrice={pricing.noPrice * 100} />
+            <OrderBook marketId={Number(id)} yesPrice={pricing.yesPrice * 100} noPrice={pricing.noPrice * 100} />
           </div>
         </div>
         

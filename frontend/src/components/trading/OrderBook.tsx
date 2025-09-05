@@ -1,14 +1,9 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import { formatUSDC } from '@/lib/decimals';
+import { useOrderBook } from '@/hooks/useMarketData';
 
-interface OrderBookEntry {
-  price: number;
-  size: number;
-  total: number;
-  outcome: 'YES' | 'NO';
-}
 
 interface Trade {
   id: string;
@@ -20,59 +15,81 @@ interface Trade {
 }
 
 interface OrderBookProps {
+  marketId: number | string;
   yesPrice: number;
   noPrice: number;
   className?: string;
 }
 
-// Mock data generator for demonstration
-const generateMockOrders = (basePrice: number, outcome: 'YES' | 'NO'): OrderBookEntry[] => {
-  const orders: OrderBookEntry[] = [];
-  let total = 0;
-  
-  for (let i = 0; i < 8; i++) {
-    const priceOffset = (Math.random() - 0.5) * 0.1;
-    const price = Math.max(0.01, Math.min(0.99, basePrice + priceOffset));
-    const size = Math.floor(Math.random() * 1000) + 100;
-    total += size;
-    
-    orders.push({
-      price,
-      size,
-      total,
-      outcome
-    });
-  }
-  
-  return outcome === 'YES' 
-    ? orders.sort((a, b) => b.price - a.price) // YES orders descending by price
-    : orders.sort((a, b) => a.price - b.price); // NO orders ascending by price
-};
-
-const generateMockTrades = (): Trade[] => {
-  const trades: Trade[] = [];
-  
-  for (let i = 0; i < 15; i++) {
-    const outcome = Math.random() > 0.5 ? 'YES' : 'NO';
-    trades.push({
-      id: `trade-${i}`,
-      price: Math.random() * 0.8 + 0.1,
-      size: Math.floor(Math.random() * 500) + 50,
-      outcome,
-      type: Math.random() > 0.5 ? 'BUY' : 'SELL',
-      timestamp: new Date(Date.now() - Math.random() * 3600000) // Random time within last hour
-    });
-  }
-  
-  return trades.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
-};
-
-export default function OrderBook({ yesPrice, noPrice, className = '' }: OrderBookProps) {
+export default function OrderBook({ marketId, yesPrice, noPrice, className = '' }: OrderBookProps) {
   const [activeTab, setActiveTab] = useState<'book' | 'trades'>('book');
   
-  const yesOrders = useMemo(() => generateMockOrders(yesPrice, 'YES'), [yesPrice]);
-  const noOrders = useMemo(() => generateMockOrders(noPrice, 'NO'), [noPrice]);
-  const recentTrades = useMemo(() => generateMockTrades(), []);
+  // Use stable order book data from TanStack Query
+  const { data: orderBookData, isLoading } = useOrderBook(marketId, yesPrice / 100, noPrice / 100);
+  
+  const yesOrders = orderBookData?.yes ?? [];
+  const noOrders = orderBookData?.no ?? [];
+  
+  // Mock trades data for now - in a real app this would also use TanStack Query
+  const recentTrades: Trade[] = [
+    {
+      id: 'trade-1',
+      price: yesPrice / 100 + 0.02,
+      size: 250,
+      outcome: 'YES',
+      type: 'BUY',
+      timestamp: new Date(Date.now() - 5 * 60 * 1000)
+    },
+    {
+      id: 'trade-2', 
+      price: noPrice / 100 - 0.01,
+      size: 180,
+      outcome: 'NO',
+      type: 'SELL',
+      timestamp: new Date(Date.now() - 8 * 60 * 1000)
+    },
+    {
+      id: 'trade-3',
+      price: yesPrice / 100 - 0.03,
+      size: 420,
+      outcome: 'YES',
+      type: 'SELL',
+      timestamp: new Date(Date.now() - 12 * 60 * 1000)
+    },
+    {
+      id: 'trade-4',
+      price: noPrice / 100 + 0.02,
+      size: 310,
+      outcome: 'NO',
+      type: 'BUY',
+      timestamp: new Date(Date.now() - 18 * 60 * 1000)
+    },
+    {
+      id: 'trade-5',
+      price: yesPrice / 100,
+      size: 150,
+      outcome: 'YES',
+      type: 'BUY',
+      timestamp: new Date(Date.now() - 25 * 60 * 1000)
+    }
+  ];
+  
+  if (isLoading) {
+    return (
+      <div className={`bg-gray-900 border border-gray-700 rounded-lg overflow-hidden ${className}`}>
+        <div className="p-8 text-center">
+          <div className="animate-pulse">
+            <div className="h-6 bg-gray-700 rounded mb-4 w-1/2 mx-auto"></div>
+            <div className="space-y-2">
+              {[1, 2, 3, 4, 5].map((i) => (
+                <div key={i} className="h-4 bg-gray-700 rounded"></div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
   
   const formatTime = (timestamp: Date) => {
     return timestamp.toLocaleTimeString('en-US', { 
@@ -82,11 +99,11 @@ export default function OrderBook({ yesPrice, noPrice, className = '' }: OrderBo
     });
   };
 
-  const OrderBookTable = ({ orders, outcome }: { orders: OrderBookEntry[], outcome: 'YES' | 'NO' }) => (
+  const OrderBookTable = ({ orders, outcome }: { orders: Array<{ price: number; amount: number; total: number }>, outcome: 'YES' | 'NO' }) => (
     <div className="space-y-1">
       <div className="flex justify-between items-center text-xs font-medium text-gray-200 px-3 py-1">
         <span>Price</span>
-        <span>Size</span>
+        <span>Amount</span>
         <span>Total</span>
       </div>
       
@@ -101,7 +118,7 @@ export default function OrderBook({ yesPrice, noPrice, className = '' }: OrderBo
               outcome === 'YES' ? 'bg-green-500' : 'bg-red-500'
             }`}
             style={{ 
-              width: `${(order.total / Math.max(...orders.map(o => o.total))) * 100}%` 
+              width: `${orders.length > 0 ? (order.total / Math.max(...orders.map(o => o.total))) * 100 : 0}%` 
             }}
           />
           
@@ -111,13 +128,13 @@ export default function OrderBook({ yesPrice, noPrice, className = '' }: OrderBo
             <span className="text-xs" role="img" aria-label={outcome === 'YES' ? 'bullish' : 'bearish'}>
               {outcome === 'YES' ? '↗️' : '↘️'}
             </span>
-            {order.price.toFixed(3)}¢
+            {(order.price * 100).toFixed(1)}¢
           </span>
           <span className="text-gray-200 font-mono">
-            {formatUSDC(BigInt(order.size * 1e18))}
+            {order.amount.toLocaleString()}
           </span>
           <span className="text-gray-300 font-mono">
-            {formatUSDC(BigInt(order.total * 1e18))}
+            {order.total.toLocaleString()}
           </span>
         </div>
       ))}

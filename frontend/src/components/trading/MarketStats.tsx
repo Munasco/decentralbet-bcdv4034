@@ -1,17 +1,16 @@
 'use client';
 
-'use client';
-
 import { formatUSDC } from '@/lib/decimals';
-import { useMemo } from 'react';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { TrendingUp, TrendingDown, Users, Activity, Brain, Trophy, Clock, DollarSign } from 'lucide-react';
+import { useMarketSocialData } from '@/hooks/useMarketData';
 
 interface MarketStatsProps {
+  marketId: number | string;
   marketData: {
     totalVolume: bigint;
     yesShares: bigint;
@@ -35,187 +34,46 @@ interface StatItem {
   icon?: React.ReactNode;
 }
 
-interface Holder {
-  id: string;
-  address: string;
-  position: 'YES' | 'NO';
-  shares: number;
-  value: number;
-  pnl: number;
-  percentage: number;
-}
-
-interface MarketActivity {
-  id: string;
-  type: 'trade' | 'large_trade' | 'milestone' | 'resolution';
-  user: string;
-  action: string;
-  amount?: number;
-  price?: number;
-  timestamp: Date;
-  significance?: 'high' | 'medium' | 'low';
-}
-
-interface ContextInsight {
-  id: string;
-  category: 'news' | 'social' | 'analysis' | 'prediction';
-  title: string;
-  content: string;
-  confidence: number;
-  source: string;
-  timestamp: Date;
-}
-
-export default function MarketStats({ marketData, pricing, className = '' }: MarketStatsProps) {
+export default function MarketStats({ marketId, marketData, pricing, className = '' }: MarketStatsProps) {
   
   const { totalVolume, yesShares, noShares, endTime, isResolved, creator } = marketData;
+  
+  // Use TanStack Query for stable, cached data
+  const { metrics, holders, activity, insights, isLoading } = useMarketSocialData(marketId, totalVolume);
   
   // Calculate market metrics
   const totalShares = yesShares + noShares;
   const marketCap = Number(totalVolume) / 1e18 * (pricing.yesPrice + pricing.noPrice);
-  const liquidity = Number(totalShares) / 1e18 * 0.1; // Rough estimate
-  const participantCount = Math.floor(Math.random() * 500) + 50; // Mock data
-  const priceChange24h = (Math.random() - 0.5) * 0.2; // Mock 24h change
-  const volumeChange24h = (Math.random() - 0.5) * 0.3; // Mock volume change
   
-  // Sample data for enhanced features
-  const topHolders: Holder[] = useMemo(() => [
-    {
-      id: '1',
-      address: '0x1234567890abcdef1234567890abcdef12345678',
-      position: 'YES',
-      shares: 15420,
-      value: 8934.50,
-      pnl: +1245.30,
-      percentage: 12.3
-    },
-    {
-      id: '2', 
-      address: '0x9876543210fedcba9876543210fedcba98765432',
-      position: 'NO',
-      shares: 12890,
-      value: 7456.80,
-      pnl: -892.15,
-      percentage: 10.8
-    },
-    {
-      id: '3',
-      address: '0xabcdefabcdefabcdefabcdefabcdefabcdefabcd',
-      position: 'YES', 
-      shares: 9850,
-      value: 5234.20,
-      pnl: +678.90,
-      percentage: 8.2
-    },
-    {
-      id: '4',
-      address: '0xfedcbafedcbafedcbafedcbafedcbafedcbafed',
-      position: 'NO',
-      shares: 8760,
-      value: 4321.60,
-      pnl: +234.75,
-      percentage: 7.1
-    },
-    {
-      id: '5',
-      address: '0x5555555555555555555555555555555555555555',
-      position: 'YES',
-      shares: 7890,
-      value: 3987.40,
-      pnl: -156.80,
-      percentage: 6.4
-    }
-  ], []);
+  // Use stable metrics from the hook instead of oscillating Math.random
+  const participantCount = metrics.data?.participantCount ?? 150;
+  const priceChange24h = metrics.data?.priceChange24h ?? 0.0;
+  const volumeChange24h = metrics.data?.volumeChange24h ?? 0.0;
+  const liquidity = Number(totalShares) / 1e18 * (metrics.data?.liquidityMultiplier ?? 0.1);
   
-  const marketActivity: MarketActivity[] = useMemo(() => [
-    {
-      id: '1',
-      type: 'large_trade',
-      user: '0x1234...5678',
-      action: 'Bought 2,500 YES shares',
-      amount: 1875,
-      price: 0.75,
-      timestamp: new Date(Date.now() - 2 * 60 * 1000),
-      significance: 'high'
-    },
-    {
-      id: '2',
-      type: 'trade',
-      user: '0xabcd...efgh',
-      action: 'Sold 800 NO shares',
-      amount: 320,
-      price: 0.40,
-      timestamp: new Date(Date.now() - 5 * 60 * 1000),
-      significance: 'medium'
-    },
-    {
-      id: '3',
-      type: 'milestone',
-      user: 'System',
-      action: 'Market reached $50K volume',
-      timestamp: new Date(Date.now() - 12 * 60 * 1000),
-      significance: 'high'
-    },
-    {
-      id: '4',
-      type: 'trade',
-      user: '0x9876...5432',
-      action: 'Bought 1,200 YES shares',
-      amount: 960,
-      price: 0.80,
-      timestamp: new Date(Date.now() - 18 * 60 * 1000),
-      significance: 'medium'
-    },
-    {
-      id: '5',
-      type: 'large_trade',
-      user: '0xdef0...1234',
-      action: 'Sold 3,000 NO shares',
-      amount: 1200,
-      price: 0.40,
-      timestamp: new Date(Date.now() - 25 * 60 * 1000),
-      significance: 'high'
-    }
-  ], []);
+  // Use data from hooks
+  const topHolders = holders.data ?? [];
+  const marketActivity = activity.data ?? [];
+  const contextInsights = insights.data ?? [];
   
-  const contextInsights: ContextInsight[] = useMemo(() => [
-    {
-      id: '1',
-      category: 'news',
-      title: 'Related News Coverage Increasing',
-      content: 'Major news outlets have increased coverage of this topic by 35% in the last 48 hours. This correlates with the recent price movement.',
-      confidence: 0.82,
-      source: 'News Sentiment AI',
-      timestamp: new Date(Date.now() - 30 * 60 * 1000)
-    },
-    {
-      id: '2',
-      category: 'social',
-      title: 'Social Media Sentiment Shift',
-      content: 'Twitter mentions show a 28% increase in positive sentiment toward the YES outcome. Key influencers are driving the conversation.',
-      confidence: 0.74,
-      source: 'Social Analytics',
-      timestamp: new Date(Date.now() - 45 * 60 * 1000)
-    },
-    {
-      id: '3',
-      category: 'analysis',
-      title: 'Technical Pattern Recognition',
-      content: 'Price action shows a bullish flag pattern forming. Historical similar patterns have a 67% success rate.',
-      confidence: 0.69,
-      source: 'Technical Analysis AI',
-      timestamp: new Date(Date.now() - 60 * 60 * 1000)
-    },
-    {
-      id: '4',
-      category: 'prediction',
-      title: 'Whale Activity Alert',
-      content: 'Large holders have been accumulating YES positions. This represents a 15% increase in whale holdings over 24h.',
-      confidence: 0.91,
-      source: 'On-chain Analytics',
-      timestamp: new Date(Date.now() - 75 * 60 * 1000)
-    }
-  ], []);
+  if (isLoading) {
+    return (
+      <Card className={`bg-gray-900 border-gray-700 ${className}`}>
+        <div className="p-8 text-center">
+          <div className="animate-pulse">
+            <div className="h-6 bg-gray-700 rounded mb-4 w-1/3 mx-auto"></div>
+            <div className="grid grid-cols-4 gap-4">
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="h-4 bg-gray-700 rounded"></div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </Card>
+    );
+  }
+  
+  // Remove the hardcoded contextInsights array - will use insights.data instead
   
   const timeRemaining = Number(endTime) * 1000 - Date.now();
   const daysRemaining = Math.max(0, Math.floor(timeRemaining / (24 * 60 * 60 * 1000)));

@@ -35,10 +35,6 @@ interface Comment {
   mentions?: string[];
 }
 
-interface CommentsProps {
-  marketId: number;
-  className?: string;
-}
 
 export default function Comments({ className = '' }: { className?: string }) {
   const [newComment, setNewComment] = useState('');
