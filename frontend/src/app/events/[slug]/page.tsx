@@ -16,6 +16,7 @@ import Comments from '@/components/events/Comments'
 import toast from 'react-hot-toast'
 import { useTokenBalance, usePlaceBet, useTokenAllowance, useTokenApproval } from '@/hooks/usePredictionMarket'
 import { parseUSDC } from '@/lib/decimals'
+import { useQueryClient } from '@tanstack/react-query'
 
 interface EventsPageProps {
   params: { slug: string }
@@ -24,6 +25,7 @@ interface EventsPageProps {
 export default function EventPage({ params }: EventsPageProps) {
   const router = useRouter()
   const { address } = useAccount()
+  const queryClient = useQueryClient()
   const { allMarkets, isLoading: listLoading } = useCombinedMarkets()
   const { data: cashUSDC } = useTokenBalance()
   const portfolioUSDC = BigInt(0)
@@ -108,12 +110,25 @@ export default function EventPage({ params }: EventsPageProps) {
     }
   })
   
-  // Betting hook with callback to finish the flow
+  // Betting hook with callback to finish the flow and invalidate cache
   const { placeBet, isLoading: isBetting } = usePlaceBet(() => {
     setIsProcessingBet(false)
     setPendingBet(null)
-    // Removed router.refresh() to prevent infinite loops
-    // TanStack Query will handle data updates naturally
+    
+    // Invalidate relevant caches after successful bet
+    setTimeout(async () => {
+      // Invalidate market data queries
+      await queryClient.invalidateQueries({ queryKey: ['market-metrics', Number(marketId)] })
+      await queryClient.invalidateQueries({ queryKey: ['top-holders', Number(marketId)] })
+      await queryClient.invalidateQueries({ queryKey: ['market-activity', Number(marketId)] })
+      await queryClient.invalidateQueries({ queryKey: ['order-book', Number(marketId)] })
+      await queryClient.invalidateQueries({ queryKey: ['blockchain-market', marketId] })
+      await queryClient.invalidateQueries({ queryKey: ['token-balance'] })
+      
+      // Force refetch to show updated values
+      await queryClient.refetchQueries({ queryKey: ['market-metrics', Number(marketId)] })
+      await queryClient.refetchQueries({ queryKey: ['blockchain-market', marketId] })
+    }, 1500) // Give blockchain time to update
   })
   
   const handlePlaceBet = async (outcome: 'yes' | 'no', amount: string) => {

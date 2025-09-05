@@ -23,10 +23,15 @@ function hashString(str: string): number {
 // Generate stable market metrics based on market data
 export function generateStableMarketMetrics(marketId: number | string, totalVolume: bigint) {
   const seed = typeof marketId === 'string' ? hashString(marketId) : marketId;
+  const volumeNum = Number(totalVolume) / 1e18;
+  
+  // Make metrics respond to actual volume changes
+  const volumeBonus = Math.floor(volumeNum / 1000); // More participants with higher volume
+  const volumeActivity = Math.min(volumeNum / 10000, 0.1); // More price activity with volume
   
   return {
-    participantCount: 50 + Math.floor(seededRandom(seed * 1) * 450), // 50-500 participants
-    priceChange24h: (seededRandom(seed * 2) - 0.5) * 0.2, // -0.1 to +0.1 (10% range)
+    participantCount: 50 + Math.floor(seededRandom(seed * 1) * 450) + volumeBonus, // Volume affects participants
+    priceChange24h: (seededRandom(seed * 2) - 0.5) * (0.2 + volumeActivity), // Volume affects volatility
     volumeChange24h: (seededRandom(seed * 3) - 0.5) * 0.3, // -0.15 to +0.15 (15% range)
     liquidityMultiplier: 0.08 + seededRandom(seed * 4) * 0.04, // 8-12% of volume
   };
@@ -74,6 +79,10 @@ export function generateStableMarketActivity(marketId: number | string) {
   const seed = typeof marketId === 'string' ? hashString(marketId) : marketId;
   const activities = [];
   
+  // Add some time-based variation to make it feel more alive
+  const timeSeed = Math.floor(Date.now() / (1000 * 60 * 5)); // Changes every 5 minutes
+  const activityVariation = seededRandom(seed * timeSeed);
+  
   const users = [
     '0x1234...5678', '0xabcd...efgh', '0x9876...5432', 
     '0xdef0...1234', '0x5555...aaaa', '0x7777...bbbb'
@@ -94,9 +103,9 @@ export function generateStableMarketActivity(marketId: number | string) {
   ];
 
   for (let i = 0; i < 5; i++) {
-    const activitySeed = seed + i * 200;
-    const isLargeTrade = seededRandom(activitySeed * 1) > 0.7;
-    const isMilestone = seededRandom(activitySeed * 2) > 0.8;
+    const activitySeed = seed + i * 200 + timeSeed;
+    const isLargeTrade = seededRandom(activitySeed * 1) > (0.7 + activityVariation * 0.1);
+    const isMilestone = seededRandom(activitySeed * 2) > (0.85 - activityVariation * 0.05);
     
     if (isMilestone) {
       activities.push({

@@ -76,9 +76,10 @@ export function useMarketActivity(marketId: number | string) {
   return useQuery({
     queryKey: ['market-activity', marketId],
     queryFn: () => generateStableMarketActivity(marketId),
-    staleTime: 1000 * 60 * 2, // 2 minutes
-    gcTime: 1000 * 60 * 10
-    // Removed refetchInterval to prevent interference with betting
+    staleTime: 1000 * 60, // 1 minute - shorter for activity
+    gcTime: 1000 * 60 * 5,
+    refetchInterval: 1000 * 90, // Gentle 90-second updates for activity
+    refetchIntervalInBackground: false, // Only when tab is active
   });
 }
 
