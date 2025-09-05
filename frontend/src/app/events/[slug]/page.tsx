@@ -27,7 +27,7 @@ export default function EventPage({ params }: EventsPageProps) {
   const { address } = useAccount()
   const queryClient = useQueryClient()
   const { allMarkets, isLoading: listLoading } = useCombinedMarkets()
-  const { data: cashUSDC } = useTokenBalance()
+  const { data: cashUSDC, refetch: refetchBalance } = useTokenBalance()
   const portfolioUSDC = BigInt(0)
 
   // Next 15: unwrap dynamic params in client components
@@ -39,7 +39,7 @@ export default function EventPage({ params }: EventsPageProps) {
   }, [allMarkets, slug])
 
   const marketId = matched?.id || 0
-  const { data: marketData, isLoading, error } = useBlockchainMarket(marketId)
+  const { data: marketData, isLoading, error, refetch: refetchMarketData } = useBlockchainMarket(marketId)
 
   const [chartData, setChartData] = useState<ChartDataPoint[]>([])
 
@@ -110,25 +110,20 @@ export default function EventPage({ params }: EventsPageProps) {
     }
   })
   
-  // Betting hook with callback to finish the flow and invalidate cache
+  // Betting hook with callback to finish the flow and refresh data
   const { placeBet, isLoading: isBetting } = usePlaceBet(() => {
     setIsProcessingBet(false)
     setPendingBet(null)
     
-    // Invalidate relevant caches after successful bet
+    // Refetch the actual blockchain data after successful bet
     setTimeout(async () => {
-      // Invalidate market data queries
-      await queryClient.invalidateQueries({ queryKey: ['market-metrics', Number(marketId)] })
-      await queryClient.invalidateQueries({ queryKey: ['top-holders', Number(marketId)] })
-      await queryClient.invalidateQueries({ queryKey: ['market-activity', Number(marketId)] })
-      await queryClient.invalidateQueries({ queryKey: ['order-book', Number(marketId)] })
-      await queryClient.invalidateQueries({ queryKey: ['blockchain-market', marketId] })
-      await queryClient.invalidateQueries({ queryKey: ['token-balance'] })
+      await refetchMarketData() // Refresh market data from contract
+      await refetchBalance()    // Refresh token balance
       
-      // Force refetch to show updated values
-      await queryClient.refetchQueries({ queryKey: ['market-metrics', Number(marketId)] })
-      await queryClient.refetchQueries({ queryKey: ['blockchain-market', marketId] })
-    }, 1500) // Give blockchain time to update
+      // Also invalidate TanStack Query cache to update mock data
+      await queryClient.invalidateQueries({ queryKey: ['market-metrics', Number(marketId), marketData?.[9]?.toString()] })
+      await queryClient.refetchQueries({ queryKey: ['market-metrics', Number(marketId), marketData?.[9]?.toString()] })
+    }, 500) // Give blockchain time to update
   })
   
   const handlePlaceBet = async (outcome: 'yes' | 'no', amount: string) => {
