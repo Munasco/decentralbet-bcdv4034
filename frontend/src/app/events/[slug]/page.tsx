@@ -54,14 +54,24 @@ export default function EventPage({ params }: EventsPageProps) {
 
     let priceYes = p.yesPrice
     let priceNo = p.noPrice
+    
+    // Create stable seed from marketId to prevent oscillation
+    const marketId = marketData[0] || 1
+    const seedBase = Number(marketId) * 123456
 
     const data: ChartDataPoint[] = []
     for (let i = points; i >= 0; i--) {
       const timestamp = now - (i * 60 * 60 * 1000)
-      const vol = BigInt(Math.floor(Math.random() * 100000 * 1e18))
+      // Use seeded "random" for stable chart data
+      const seed = seedBase + i
+      const pseudoRandom1 = Math.sin(seed * 0.1) * 0.5 + 0.5 // 0-1 range
+      const pseudoRandom2 = Math.sin(seed * 0.2) * 0.5 + 0.5 // 0-1 range
+      
+      const vol = BigInt(Math.floor(pseudoRandom1 * 100000 * 1e18))
       const date = new Date(timestamp)
-      // small random walk
-      priceYes = Math.max(0.01, Math.min(0.99, priceYes + (Math.random() - 0.5) * 0.02))
+      // Stable price walk using seeded values
+      const priceChange = (pseudoRandom2 - 0.5) * 0.02
+      priceYes = Math.max(0.01, Math.min(0.99, priceYes + priceChange))
       priceNo = 1 - priceYes
       data.push({
         timestamp,
@@ -98,11 +108,12 @@ export default function EventPage({ params }: EventsPageProps) {
     }
   })
   
-  // Betting hook with callback to finish the flow and refresh data
+  // Betting hook with callback to finish the flow
   const { placeBet, isLoading: isBetting } = usePlaceBet(() => {
     setIsProcessingBet(false)
     setPendingBet(null)
-    router.refresh()
+    // Removed router.refresh() to prevent infinite loops
+    // TanStack Query will handle data updates naturally
   })
   
   const handlePlaceBet = async (outcome: 'yes' | 'no', amount: string) => {

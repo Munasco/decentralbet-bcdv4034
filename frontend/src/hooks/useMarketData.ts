@@ -76,9 +76,9 @@ export function useMarketActivity(marketId: number | string) {
   return useQuery({
     queryKey: ['market-activity', marketId],
     queryFn: () => generateStableMarketActivity(marketId),
-    staleTime: 1000 * 30, // 30 seconds for more frequent updates
-    gcTime: 1000 * 60 * 5,
-    refetchInterval: 1000 * 60, // Refetch every minute to simulate real-time
+    staleTime: 1000 * 60 * 2, // 2 minutes
+    gcTime: 1000 * 60 * 10
+    // Removed refetchInterval to prevent interference with betting
   });
 }
 
@@ -106,9 +106,9 @@ export function useOrderBook(
   return useQuery({
     queryKey: ['order-book', marketId, Math.round(yesPrice * 100), Math.round(noPrice * 100)],
     queryFn: () => generateStableOrderBook(yesPrice, noPrice, seed),
-    staleTime: 1000 * 15, // 15 seconds
-    gcTime: 1000 * 60 * 5,
-    refetchInterval: 1000 * 30, // Refetch every 30 seconds
+    staleTime: 1000 * 60, // 1 minute
+    gcTime: 1000 * 60 * 5
+    // Removed refetchInterval to prevent interference with betting
   });
 }
 
@@ -155,8 +155,8 @@ export function useRealTimePricing(marketId: number | string, baseYesPrice: numb
         lastUpdate: new Date(),
       };
     },
-    staleTime: 1000 * 10, // 10 seconds
-    gcTime: 1000 * 30,
-    refetchInterval: 1000 * 15, // Update every 15 seconds
+    staleTime: 1000 * 60, // 1 minute  
+    gcTime: 1000 * 60 * 5
+    // Removed refetchInterval to prevent interference with betting
   });
 }

@@ -182,39 +182,48 @@ export function useAllMarkets() {
   
   
 
-  useEffect(() => {
-    async function fetchMarkets() {
-      if (!marketCount || !CONTRACTS.PREDICTION_MARKET) {
-        setIsLoading(false)
-        return
-      }
-
-      try {
-        setIsLoading(true)
-        const marketPromises = []
-
-        for (let i = 1; i <= Number(marketCount); i++) {
-          const marketPromise = fetch('/api/market/' + i) // You'll need to implement this API endpoint
-            .then(res => res.json())
-            .catch(() => null)
-          marketPromises.push(marketPromise)
-        }
-
-        const marketResults = await Promise.all(marketPromises)
-        const validMarkets = marketResults.filter(Boolean)
-        setMarkets(validMarkets)
-      } catch (error) {
-        console.error('Error fetching markets:', error)
-        toast.error('Failed to load markets')
-      } finally {
-        setIsLoading(false)
-      }
+  const fetchMarkets = useCallback(async () => {
+    if (!marketCount || !CONTRACTS.PREDICTION_MARKET) {
+      setIsLoading(false)
+      return
     }
 
-    fetchMarkets()
+    try {
+      setIsLoading(true)
+      const marketPromises = []
+
+      for (let i = 1; i <= Number(marketCount); i++) {
+        const marketPromise = fetch('/api/market/' + i) // You'll need to implement this API endpoint
+          .then(res => res.json())
+          .catch(() => null)
+        marketPromises.push(marketPromise)
+      }
+
+      const marketResults = await Promise.all(marketPromises)
+      const validMarkets = marketResults.filter(Boolean)
+      setMarkets(validMarkets)
+    } catch (error) {
+      console.error('Error fetching markets:', error)
+      toast.error('Failed to load markets')
+    } finally {
+      setIsLoading(false)
+    }
   }, [marketCount])
 
-  return { markets, isLoading, refetch: () => window.location.reload() }
+  useEffect(() => {
+    fetchMarkets()
+  }, [fetchMarkets])
+
+  return { 
+    markets, 
+    isLoading, 
+    refetch: () => {
+      // Use proper refetch instead of window.location.reload to prevent infinite loops
+      setMarkets([])
+      setIsLoading(true)
+      fetchMarkets()
+    }
+  }
 }
 
 // Hook for token balance
