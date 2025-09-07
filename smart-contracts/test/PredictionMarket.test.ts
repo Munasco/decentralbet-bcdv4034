@@ -133,8 +133,8 @@ describe("PredictionMarket", function () {
   });
 
   describe("Betting", function () {
-    let marketId: number;
-    let endTime: number;
+    let marketId;
+    let endTime;
 
     beforeEach(async function () {
       endTime = (await time.latest()) + 86400;
@@ -150,7 +150,7 @@ describe("PredictionMarket", function () {
         predictionMarket.connect(user1).placeBet(marketId, outcomeId, betAmount)
       )
         .to.emit(predictionMarket, "BetPlaced")
-        .withArgs(marketId, outcomeId, user1Address, betAmount, expect.any(String));
+        .withArgs(marketId, outcomeId, user1Address, betAmount);
 
       const position = await predictionMarket.getUserPosition(user1Address, marketId, outcomeId);
       expect(position.backed).to.equal(betAmount);
@@ -195,8 +195,8 @@ describe("PredictionMarket", function () {
   });
 
   describe("Market Resolution", function () {
-    let marketId: number;
-    let endTime: number;
+    let marketId;
+    let endTime;
 
     beforeEach(async function () {
       endTime = (await time.latest()) + 86400;
@@ -258,8 +258,8 @@ describe("PredictionMarket", function () {
   });
 
   describe("Claims and Winnings", function () {
-    let marketId: number;
-    let endTime: number;
+    let marketId;
+    let endTime;
 
     beforeEach(async function () {
       endTime = (await time.latest()) + 86400;

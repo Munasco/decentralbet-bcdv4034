@@ -1,172 +1,197 @@
-import hre from "hardhat";
+import { ethers } from "hardhat";
+import fs from 'fs';
+import path from 'path';
+
+/**
+ * DecentralBet Smart Contract Deployment
+ * Single consolidated script for all networks (localhost, sepolia, polygon)
+ * Usage: npx hardhat run scripts/deploy.js --network <network>
+ */
+
+const NETWORK_CONFIGS = {
+  localhost: {
+    name: "Local Hardhat",
+    chainId: 1337,
+    rpcUrl: "http://127.0.0.1:8545",
+    blockExplorer: null
+  },
+  sepolia: {
+    name: "Ethereum Sepolia Testnet",
+    chainId: 11155111,
+    rpcUrl: "https://eth-sepolia.g.alchemy.com/v2/M_mrbBEw-ctKxBuux_g0g",
+    blockExplorer: "https://sepolia.etherscan.io"
+  },
+  polygon: {
+    name: "Polygon Mumbai Testnet", 
+    chainId: 80001,
+    rpcUrl: "https://polygon-mumbai.g.alchemy.com/v2/M_mrbBEw-ctKxBuux_g0g",
+    blockExplorer: "https://mumbai.polygonscan.com"
+  }
+};
 
 async function main() {
-  console.log("🚀 Starting deployment of DecentralVote contracts...\n");
-
-  // Get the deployer account
-  const [deployer] = await hre.ethers.getSigners();
-  console.log("📋 Deploying contracts with account:", deployer.address);
-
-  // Check deployer balance
-  const balance = await hre.ethers.provider.getBalance(deployer.address);
-  console.log("💰 Account balance:", hre.ethers.formatEther(balance), "ETH\n");
-
-  // Deploy VotingContract
-  console.log("📋 Deploying VotingContract...");
-  const VotingContractFactory = await hre.ethers.getContractFactory("VotingContract");
-  const votingContract = await VotingContractFactory.deploy();
-  await votingContract.waitForDeployment();
+  const network = hre.network.name;
+  const config = NETWORK_CONFIGS[network];
   
-  const votingContractAddress = await votingContract.getAddress();
-  console.log("✅ VotingContract deployed to:", votingContractAddress);
-
-  // Deploy ElectionFactory
-  console.log("\n📋 Deploying ElectionFactory...");
-  const ElectionFactoryFactory = await hre.ethers.getContractFactory("ElectionFactory");
-  const electionFactory = await ElectionFactoryFactory.deploy();
-  await electionFactory.waitForDeployment();
-  
-  const electionFactoryAddress = await electionFactory.getAddress();
-  console.log("✅ ElectionFactory deployed to:", electionFactoryAddress);
-
-  // Verify ownership
-  console.log("\n🔍 Verifying contract ownership...");
-  const votingContractOwner = await votingContract.owner();
-  const electionFactoryOwner = await electionFactory.owner();
-  
-  console.log("📋 VotingContract owner:", votingContractOwner);
-  console.log("📋 ElectionFactory owner:", electionFactoryOwner);
-
-  // Create a sample election (optional - comment out for production)
-  if (process.env.CREATE_SAMPLE_DATA === "true") {
-    console.log("\n🗳️ Creating sample election...");
-    
-    const currentTime = Math.floor(Date.now() / 1000);
-    const startTime = currentTime + (5 * 60); // 5 minutes from now
-    const endTime = currentTime + (60 * 60); // 1 hour from now
-    
-    const createElectionTx = await votingContract.createElection(
-      "Sample University Election 2024",
-      "Election for Student Council President",
-      startTime,
-      endTime
-    );
-    
-    await createElectionTx.wait();
-    console.log("✅ Sample election created with ID: 1");
-
-    // Add sample candidates
-    console.log("👥 Adding sample candidates...");
-    
-    const addCandidate1Tx = await votingContract.addCandidate(
-      1,
-      "Alice Johnson",
-      "Computer Science student with leadership experience in various clubs"
-    );
-    await addCandidate1Tx.wait();
-    
-    const addCandidate2Tx = await votingContract.addCandidate(
-      1,
-      "Bob Smith", 
-      "Business student focused on improving campus facilities"
-    );
-    await addCandidate2Tx.wait();
-    
-    const addCandidate3Tx = await votingContract.addCandidate(
-      1,
-      "Charlie Brown",
-      "Engineering student passionate about sustainability initiatives"
-    );
-    await addCandidate3Tx.wait();
-    
-    console.log("✅ Sample candidates added to election");
-
-    // Register some sample voters (using deployer as sample voter)
-    console.log("👤 Registering sample voter...");
-    const registerVoterTx = await votingContract.registerVoter(1, deployer.address);
-    await registerVoterTx.wait();
-    console.log("✅ Sample voter registered");
+  if (!config) {
+    throw new Error(`Unsupported network: ${network}. Supported: ${Object.keys(NETWORK_CONFIGS).join(', ')}`);
   }
 
-  // Display network information
-  const network = await hre.ethers.provider.getNetwork();
-  console.log("\n📡 Network Information:");
-  console.log("   Network Name:", network.name);
-  console.log("   Chain ID:", network.chainId);
-  console.log("   Block Number:", await hre.ethers.provider.getBlockNumber());
+  console.log(`🚀 Deploying DecentralBet contracts to ${config.name}`);
+  console.log(`Network: ${network} (Chain ID: ${config.chainId})`);
+  console.log(`===============================================`);
 
-  // Save deployment information
+  const [deployer] = await ethers.getSigners();
+  console.log("Deploying with account:", deployer.address);
+
+  // Check balance
+  const balance = await deployer.provider.getBalance(deployer.address);
+  console.log("Account balance:", ethers.formatEther(balance), "ETH");
+
+  if (network !== 'localhost' && balance < ethers.parseEther("0.01")) {
+    console.log(`⚠️  Low balance! Get testnet ETH from:`);
+    if (network === 'sepolia') {
+      console.log("   https://sepoliafaucet.com/");
+      console.log("   https://www.alchemy.com/faucets/ethereum-sepolia");
+    } else if (network === 'polygon') {
+      console.log("   https://faucet.polygon.technology/");
+    }
+    console.log("");
+  }
+
+  // Deploy MockUSDC
+  console.log("📦 Step 1: Deploying MockUSDC...");
+  const MockUSDC = await ethers.getContractFactory("MockUSDC");
+  const mockUSDC = await MockUSDC.deploy();
+  await mockUSDC.waitForDeployment();
+  const mockUSDCAddress = await mockUSDC.getAddress();
+  console.log("✅ MockUSDC deployed to:", mockUSDCAddress);
+
+  // Deploy PredictionMarketFactory  
+  console.log("\n📦 Step 2: Deploying PredictionMarketFactory...");
+  const PredictionMarketFactory = await ethers.getContractFactory("PredictionMarketFactory");
+  const factory = await PredictionMarketFactory.deploy();
+  await factory.waitForDeployment();
+  const factoryAddress = await factory.getAddress();
+  console.log("✅ PredictionMarketFactory deployed to:", factoryAddress);
+
+  // Deploy main PredictionMarket
+  console.log("\n📦 Step 3: Deploying PredictionMarket...");
+  const PredictionMarket = await ethers.getContractFactory("PredictionMarket");
+  const resolutionTime = network === 'localhost' ? 300 : 3600; // 5 min local, 1 hour testnet
+  const predictionMarket = await PredictionMarket.deploy(
+    mockUSDCAddress,
+    deployer.address, // Oracle address
+    resolutionTime
+  );
+  await predictionMarket.waitForDeployment();
+  const predictionMarketAddress = await predictionMarket.getAddress();
+  console.log("✅ PredictionMarket deployed to:", predictionMarketAddress);
+
+  // Save deployment info
   const deploymentInfo = {
-    network: {
-      name: network.name,
-      chainId: Number(network.chainId),
-    },
+    network: config.name,
+    chainId: config.chainId,
+    deployedAt: new Date().toISOString(),
+    deployer: deployer.address,
     contracts: {
-      VotingContract: {
-        address: votingContractAddress,
-        owner: votingContractOwner,
-        deploymentBlock: await hre.ethers.provider.getBlockNumber(),
-      },
-      ElectionFactory: {
-        address: electionFactoryAddress,
-        owner: electionFactoryOwner,
-        deploymentBlock: await hre.ethers.provider.getBlockNumber(),
-      },
+      MockUSDC: mockUSDCAddress,
+      PredictionMarketFactory: factoryAddress, 
+      PredictionMarket: predictionMarketAddress
     },
-    deployer: {
-      address: deployer.address,
-      balance: hre.ethers.formatEther(balance),
-    },
-    timestamp: new Date().toISOString(),
+    rpcUrl: config.rpcUrl,
+    blockExplorer: config.blockExplorer
   };
 
-  console.log("\n📄 Deployment Summary:");
-  console.log("=====================================");
-  console.log("VotingContract:    ", votingContractAddress);
-  console.log("ElectionFactory:   ", electionFactoryAddress);
-  console.log("Network:           ", network.name);
-  console.log("Chain ID:          ", network.chainId);
-  console.log("Deployer:          ", deployer.address);
-  console.log("=====================================\n");
-
-  // Save deployment info to file (useful for integration)
-  const fs = require("fs");
-  const path = require("path");
-  
-  const deploymentFilePath = path.join(__dirname, "..", "deployments", `${network.name}.json`);
-  
-  // Create deployments directory if it doesn't exist
-  const deploymentsDir = path.dirname(deploymentFilePath);
+  // Save to deployments directory
+  const deploymentsDir = path.join(__dirname, '../deployments');
   if (!fs.existsSync(deploymentsDir)) {
-    fs.mkdirSync(deploymentsDir, { recursive: true });
+    fs.mkdirSync(deploymentsDir);
   }
   
-  fs.writeFileSync(deploymentFilePath, JSON.stringify(deploymentInfo, null, 2));
-  console.log("💾 Deployment information saved to:", deploymentFilePath);
+  const deploymentFile = path.join(deploymentsDir, `${network}.json`);
+  fs.writeFileSync(deploymentFile, JSON.stringify(deploymentInfo, null, 2));
 
-  // Instructions for next steps
-  console.log("\n🎯 Next Steps:");
-  console.log("1. Verify contracts on Etherscan (if on testnet/mainnet):");
-  console.log(`   npx hardhat verify ${votingContractAddress} --network ${network.name}`);
-  console.log(`   npx hardhat verify ${electionFactoryAddress} --network ${network.name}`);
-  console.log("\n2. Update frontend configuration with contract addresses");
-  console.log("\n3. Update backend configuration with contract addresses");
-  
-  if (network.name === "localhost" || network.name === "hardhat") {
-    console.log("\n🔧 Local Development:");
-    console.log("   - Contract addresses are available for frontend integration");
-    console.log("   - Use these addresses in your Next.js app configuration");
-    console.log("   - Run 'npm test' to verify contract functionality");
+  // Update environment files
+  updateEnvironmentFiles(network, deploymentInfo);
+
+  // Display results
+  console.log("\n🎉 Deployment completed successfully!");
+  console.log("===============================================");
+  console.log("📋 Contract Addresses:");
+  console.log("===============================================");
+  console.log("MockUSDC:               ", mockUSDCAddress);
+  console.log("PredictionMarketFactory:", factoryAddress);
+  console.log("PredictionMarket:       ", predictionMarketAddress);
+  console.log("===============================================");
+  console.log("💾 Deployment saved to:", deploymentFile);
+
+  if (config.blockExplorer) {
+    console.log("🔗 View on Block Explorer:");
+    console.log(`   ${config.blockExplorer}/address/${predictionMarketAddress}`);
   }
 
-  console.log("\n✨ Deployment completed successfully!");
+  if (network !== 'localhost') {
+    console.log("\n📱 MetaMask Configuration:");
+    console.log(`Network Name: ${config.name}`);
+    console.log(`RPC URL: ${config.rpcUrl}`);
+    console.log(`Chain ID: ${config.chainId}`);
+    console.log(`Currency: ETH`);
+    if (config.blockExplorer) {
+      console.log(`Block Explorer: ${config.blockExplorer}`);
+    }
+  }
+
+  console.log("===============================================");
 }
 
-// Handle errors
+function updateEnvironmentFiles(network, deploymentInfo) {
+  const { contracts } = deploymentInfo;
+  
+  // Update backend environment
+  const backendEnvPath = path.join(__dirname, '../../backend/.env');
+  updateEnvFile(backendEnvPath, {
+    ETHEREUM_NETWORK: network,
+    ETHEREUM_RPC_URL: deploymentInfo.rpcUrl,
+    CHAIN_ID: deploymentInfo.chainId.toString(),
+    PREDICTION_MARKET_ADDRESS: contracts.PredictionMarket,
+    MOCK_USDC_ADDRESS: contracts.MockUSDC,
+    PREDICTION_MARKET_FACTORY_ADDRESS: contracts.PredictionMarketFactory
+  });
+
+  // Update frontend environment
+  const frontendEnvPath = path.join(__dirname, '../../frontend/.env.local');
+  updateEnvFile(frontendEnvPath, {
+    NEXT_PUBLIC_CHAIN_ID: deploymentInfo.chainId.toString(),
+    NEXT_PUBLIC_ETHEREUM_RPC_URL: deploymentInfo.rpcUrl,
+    NEXT_PUBLIC_PREDICTION_MARKET_ADDRESS: contracts.PredictionMarket,
+    NEXT_PUBLIC_MOCK_USDC_ADDRESS: contracts.MockUSDC
+  });
+
+  console.log("✅ Environment files updated");
+}
+
+function updateEnvFile(filePath, vars) {
+  let content = '';
+  if (fs.existsSync(filePath)) {
+    content = fs.readFileSync(filePath, 'utf8');
+  }
+
+  Object.entries(vars).forEach(([key, value]) => {
+    const regex = new RegExp(`^${key}=.*$`, 'm');
+    if (regex.test(content)) {
+      content = content.replace(regex, `${key}=${value}`);
+    } else {
+      content += `\n${key}=${value}`;
+    }
+  });
+
+  fs.writeFileSync(filePath, content.trim() + '\n');
+}
+
 main()
   .then(() => process.exit(0))
   .catch((error) => {
-    console.error("❌ Deployment failed:");
-    console.error(error);
+    console.error("❌ Deployment failed:", error);
     process.exit(1);
   });

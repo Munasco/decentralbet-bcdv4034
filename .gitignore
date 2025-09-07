@@ -1,90 +1,78 @@
-# Dependencies
-node_modules/
-*.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
+# ============================================================================
+# DecentralBet - Comprehensive .gitignore
+# ============================================================================
 
-# Production builds
-.next/
-build/
-dist/
-out/
-
-# Environment variables
-.env
-.env.local
-.env.production
-.env.development.local
-.env.test.local
-.env.production.local
-
-# Hardhat files
-cache/
-artifacts/
-.openzeppelin/
-deployments/*
-!deployments/.gitkeep
-gas-report.txt
-coverage/
-coverage.json
-typechain-types/
-
-# IDE and OS files
-.DS_Store
-.vscode/
-.idea/
-*.swp
-*.swo
-*~
-
-# Temporary files
-*.tmp
-*.temp
-.cache/
-
-# Terraform
-*.tfstate
-*.tfstate.*
-.terraform/
-.terraform.lock.hcl
-terraform.tfvars
-
-# Ansible
-*.retry
-.ansible/
-vault_pass.txt
-
-# Misc
-.nyc_output
-.sass-cache
-.eslintcache
-
-# Dependencies
+# =============================================================================
+# Dependencies and Package Managers
+# =============================================================================
 node_modules/
 */node_modules/
+.pnp
+.pnp.js
+jspm_packages/
 
-# Production builds
-.next/
-build/
-dist/
+# Yarn
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions
+.yarn-integrity
+yarn-debug.log*
+yarn-error.log*
 
-# Environment variables
+# NPM
+npm-debug.log*
+.npm
+
+# PNPM
+pnpm-debug.log*
+.pnpm-debug.log*
+
+# =============================================================================
+# Environment Variables and Secrets
+# =============================================================================
 .env
 .env.local
 .env.development.local
 .env.test.local
 .env.production.local
+.env.production
 **/.env
 **/.env.*
+!.env.example
 
+# Private keys and secrets
+*.key
+*.pem
+*.crt
+*.p12
+*.pfx
+vault_pass.txt
+
+# =============================================================================
+# Build Outputs and Production Files
+# =============================================================================
+# Next.js
+.next/
+out/
+
+# Build directories
+build/
+dist/
+public/build/
+
+# Static files
+*.tgz
+*.tar.gz
+
+# =============================================================================
+# Development and Testing
+# =============================================================================
 # Logs
-logs
+logs/
 *.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
 lerna-debug.log*
 
 # Runtime data
@@ -96,70 +84,117 @@ pids
 # Coverage directory used by tools like istanbul
 coverage/
 *.lcov
+.nyc_output
 
-# Dependency directories
-jspm_packages/
-
-# Optional npm cache directory
-.npm
-
-# Optional eslint cache
+# ESLint cache
 .eslintcache
 
-# Output of 'npm pack'
-*.tgz
+# Testing
+test-results/
+playwright-report/
+.coverage
 
-# Yarn Integrity file
-.yarn-integrity
-
-# parcel-bundler cache (https://parceljs.org/)
-.cache
+# Cache directories
+.cache/
 .parcel-cache
+.sass-cache
 
-# next.js build output
-.next
-
-# nuxt.js build output
-.nuxt
-
-# vuepress build output
-.vuepress/dist
-
-# Serverless directories
-.serverless
-
-# FuseBox cache
-.fusebox/
-
-# DynamoDB Local files
-.dynamodb/
-
-# IDE and Editor files
-.vscode/
-.idea/
-*.swp
-*.swo
-*~
-
-# OS generated files
-.DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
-Thumbs.db
-
-# Blockchain specific
-cache/
-artifacts/
-typechain/
-
-# Hardhat files
+# =============================================================================
+# Blockchain and Smart Contract Artifacts
+# =============================================================================
+# Hardhat
 cache/
 artifacts/
 typechain-types/
+gas-report.txt
 
+# OpenZeppelin
+.openzeppelin/
+
+# Deployments (keep template)
+deployments/*
+!deployments/.gitkeep
+!deployments/*.example.json
+
+# Foundry (if used)
+out/
+broadcast/
+
+# =============================================================================
+# IDEs and Editors
+# =============================================================================
+# VSCode
+.vscode/
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# IntelliJ IDEA
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# Vim
+*.swp
+*.swo
+*~
+.vim/
+
+# Emacs
+*~
+\#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
+*.elc
+auto-save-list
+tramp
+.\#*
+
+# Sublime Text
+*.tmlanguage.cache
+*.tmPreferences.cache
+*.stTheme.cache
+*.sublime-workspace
+*.sublime-project
+
+# =============================================================================
+# Operating System Files
+# =============================================================================
+# macOS
+.DS_Store
+.DS_Store?
+._*
+.AppleDouble
+.LSOverride
+.Spotlight-V100
+.Trashes
+.fseventsd
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+
+# Windows
+Desktop.ini
+Thumbs.db
+ehthumbs.db
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+$RECYCLE.BIN/
+*.stackdump
+
+# Linux
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
+
+# =============================================================================
+# Infrastructure and DevOps
+# =============================================================================
 # Terraform
 *.tfstate
 *.tfstate.*
@@ -167,47 +202,65 @@ typechain-types/
 *.tfvars
 !*.tfvars.example
 .terraform/
+.terraform.lock.hcl
+terraform.tfvars.backup
+
+# Ansible
+*.retry
+.ansible/
 
 # Docker
 docker-compose.override.yml
+.dockerignore
 
-# Kubernetes secrets
+# Kubernetes
 k8s/*secret*.yaml
 !k8s/*secret*.yaml.template
-
-# Certificates
-*.pem
-*.key
-*.crt
-
-# Temporary files
-temp/
-tmp/
-*.tmp
-
-# MacOS
-.AppleDouble
-.LSOverride
-
-# Windows
-Desktop.ini
-$RECYCLE.BIN/
-
-# Linux
-*~
-
-# Backup files
-*.bak
-*.backup
-
-# Testing
-test-results/
-playwright-report/
-coverage/
 
 # Azure
 .azure/
 
-# Local configuration
+# =============================================================================
+# Temporary and Backup Files
+# =============================================================================
+temp/
+tmp/
+*.tmp
+*.temp
+*.bak
+*.backup
+*.orig
+*.rej
+
+# =============================================================================
+# Package Manager Lock Files (Optional - Comment out if you want to track them)
+# =============================================================================
+# Uncomment these if you want to ignore lock files
+# package-lock.json
+# yarn.lock
+# pnpm-lock.yaml
+
+# =============================================================================
+# Local Configuration Files
+# =============================================================================
 config/local.json
 local.config.js
+.vscode/settings.json
+
+# =============================================================================
+# Miscellaneous
+# =============================================================================
+# Serverless directories
+.serverless/
+
+# FuseBox cache
+.fusebox/
+
+# DynamoDB Local files
+.dynamodb/
+
+# TernJS port file
+.tern-port
+
+# Stores VSCode versions used for testing VSCode extensions
+.vscode-test
