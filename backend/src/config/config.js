@@ -35,10 +35,16 @@ const config = {
   ethereum: {
     network: process.env.ETHEREUM_NETWORK || 'localhost',
     rpcUrl: process.env.ETHEREUM_RPC_URL || 'http://127.0.0.1:8545',
-    sepoliaRpcUrl: process.env.SEPOLIA_RPC_URL || '',
+    sepoliaRpcUrl: process.env.SEPOLIA_RPC_URL || 'https://eth-sepolia.g.alchemy.com/v2/M_mrbBEw-ctKxBuux_g0g',
+    chainId: process.env.CHAIN_ID || (process.env.ETHEREUM_NETWORK === 'sepolia' ? 11155111 : 1337),
     privateKey: process.env.PRIVATE_KEY || '',
     gasLimit: process.env.GAS_LIMIT || 3000000,
     gasPrice: process.env.GAS_PRICE || '20000000000', // 20 gwei
+    alchemyApiKey: 'M_mrbBEw-ctKxBuux_g0g',
+    // Automatically switch RPC based on network
+    getCurrentRpcUrl: function() {
+      return this.network === 'sepolia' ? this.sepoliaRpcUrl : this.rpcUrl;
+    }
   },
   
   // Smart Contract Addresses

@@ -1,0 +1,204 @@
+---
+# Default deny-all network policy
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-all
+  namespace: decentralbet
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress
+  - Egress
+
+---
+# Allow frontend to backend communication
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: frontend-to-backend
+  namespace: decentralbet
+spec:
+  podSelector:
+    matchLabels:
+      app: backend
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          app: frontend
+    ports:
+    - protocol: TCP
+      port: 5000
+
+---
+# Allow backend to database communication
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: backend-to-database
+  namespace: decentralbet
+spec:
+  podSelector:
+    matchLabels:
+      app: backend
+  policyTypes:
+  - Egress
+  egress:
+  # Allow DNS resolution
+  - to: []
+    ports:
+    - protocol: UDP
+      port: 53
+  # Allow MongoDB connection (CosmosDB)
+  - to: []
+    ports:
+    - protocol: TCP
+      port: 27017
+  # Allow Redis connection  
+  - to: []
+    ports:
+    - protocol: TCP
+      port: 6379
+  # Allow HTTPS for external blockchain RPC
+  - to: []
+    ports:
+    - protocol: TCP
+      port: 443
+
+---
+# Allow ingress controller to frontend
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: ingress-to-frontend
+  namespace: decentralbet
+spec:
+  podSelector:
+    matchLabels:
+      app: frontend
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: ingress-nginx
+    ports:
+    - protocol: TCP
+      port: 3000
+
+---
+# Allow ingress controller to backend (for API calls)
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: ingress-to-backend
+  namespace: decentralbet
+spec:
+  podSelector:
+    matchLabels:
+      app: backend
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: ingress-nginx
+    ports:
+    - protocol: TCP
+      port: 5000
+
+---
+# Allow monitoring to scrape metrics
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: monitoring-scrape
+  namespace: decentralbet
+spec:
+  podSelector:
+    matchLabels:
+      app: backend
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: monitoring
+    ports:
+    - protocol: TCP
+      port: 9090  # Prometheus metrics port
+
+---
+# Allow load testing from specific namespace
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-load-testing
+  namespace: decentralbet
+spec:
+  podSelector:
+    matchLabels:
+      app: backend
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: load-testing
+    ports:
+    - protocol: TCP
+      port: 5000
+
+---
+# Allow health check from any namespace (for load balancer probes)
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-health-checks
+  namespace: decentralbet
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress
+  ingress:
+  - from: []
+    ports:
+    - protocol: TCP
+      port: 5000
+    - protocol: TCP
+      port: 3000
+  # Only allow specific health check endpoints (this would need application-level filtering)
+
+---
+# Egress policy for frontend (external resources)
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: frontend-egress
+  namespace: decentralbet
+spec:
+  podSelector:
+    matchLabels:
+      app: frontend
+  policyTypes:
+  - Egress
+  egress:
+  # Allow DNS resolution
+  - to: []
+    ports:
+    - protocol: UDP
+      port: 53
+  # Allow HTTP/HTTPS for external APIs (if needed)
+  - to: []
+    ports:
+    - protocol: TCP
+      port: 80
+    - protocol: TCP
+      port: 443

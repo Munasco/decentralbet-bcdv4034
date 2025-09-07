@@ -16,7 +16,12 @@ spec:
       labels:
         app: backend
         component: api
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9090"
+        prometheus.io/path: "/metrics"
     spec:
+      serviceAccountName: decentralbet-sa
       containers:
       - name: backend
         image: decentralbetacr.azurecr.io/decentralbet-backend:latest
@@ -80,6 +85,10 @@ spec:
   - name: http
     port: 5000
     targetPort: 5000
+    protocol: TCP
+  - name: metrics
+    port: 9090
+    targetPort: 9090
     protocol: TCP
   type: ClusterIP
 ---
