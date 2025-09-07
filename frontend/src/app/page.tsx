@@ -107,7 +107,7 @@ const portfolioUSDC = BigInt(0);
                 <p className="text-sm">Be the first to create a prediction market.</p>
                 <button 
                   onClick={() => window.open('/create', '_self')}
-                  className="mt-4 bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-lg"
+                  className="mt-4 bg-success hover:bg-success/90 text-white font-medium py-2 px-4 rounded-lg"
                 >
                   🎯 Create First Market
                 </button>
@@ -125,7 +125,7 @@ const portfolioUSDC = BigInt(0);
                   <div className="flex items-center">
                     <span className="text-2xl mr-3">{market.image}</span>
                     <div>
-                      <span className="px-2 py-1 text-xs font-medium bg-blue-900/30 text-blue-400 rounded-full">
+                      <span className="px-2 py-1 text-xs font-medium bg-info-muted/30 text-info rounded-full">
                         {market.category} • LIVE
                       </span>
                     </div>
@@ -140,7 +140,7 @@ const portfolioUSDC = BigInt(0);
                       <div
                         className="absolute inset-0 rounded-full"
                         style={{
-                          background: `conic-gradient(#22c55e ${(market.yesPrice * 100).toFixed(0)}%, #374151 0)`
+                          background: `conic-gradient(var(--success) ${(market.yesPrice * 100).toFixed(0)}%, #374151 0)`
                         }}
                       />
                       <div className="absolute inset-1 bg-gray-900 rounded-full flex items-center justify-center text-xs text-gray-100 font-medium">
@@ -157,11 +157,11 @@ const portfolioUSDC = BigInt(0);
                 <div className="grid grid-cols-2 gap-3 mb-4">
                   <div className="bg-gray-800 border border-gray-700 text-gray-200 font-medium py-3 px-4 rounded-lg">
                     <div className="text-xs opacity-75">YES</div>
-                    <div className="text-lg font-bold text-green-300">{(market.yesPrice * 100).toFixed(0)}¢</div>
+                    <div className="text-lg font-bold text-success">{(market.yesPrice * 100).toFixed(0)}¢</div>
                   </div>
                   <div className="bg-gray-800 border border-gray-700 text-gray-200 font-medium py-3 px-4 rounded-lg">
                     <div className="text-xs opacity-75">NO</div>
-                    <div className="text-lg font-bold text-red-300">{(market.noPrice * 100).toFixed(0)}¢</div>
+                    <div className="text-lg font-bold text-error">{(market.noPrice * 100).toFixed(0)}¢</div>
                   </div>
                 </div>
 
@@ -186,7 +186,7 @@ const portfolioUSDC = BigInt(0);
         <div className="text-center mt-12">
           <button 
             onClick={() => window.open('/create', '_self')}
-            className="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-lg text-lg"
+            className="bg-success hover:bg-success/90 text-white font-bold py-3 px-8 rounded-lg text-lg"
           >
             🎯 Create Market
           </button>

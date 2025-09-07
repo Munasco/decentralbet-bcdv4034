@@ -164,12 +164,12 @@ export default function CreateMarket() {
                 type="text"
                 value={formData.question}
                 onChange={(e) => setFormData(prev => ({ ...prev, question: e.target.value }))}
-                className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent ${
-                  errors.question ? 'border-red-500' : 'border-gray-300'
+                className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-info focus:border-transparent ${
+                  errors.question ? 'border-error' : 'border-gray-300'
                 }`}
                 placeholder="e.g., Will Bitcoin reach $100,000 by the end of 2025?"
               />
-              {errors.question && <p className="text-red-500 text-sm mt-1">{errors.question}</p>}
+              {errors.question && <p className="text-error text-sm mt-1">{errors.question}</p>}
             </div>
 
             {/* Category */}
@@ -180,7 +180,7 @@ export default function CreateMarket() {
               <select
                 value={formData.category}
                 onChange={(e) => setFormData(prev => ({ ...prev, category: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-info focus:border-transparent"
               >
                 {categories.map(cat => (
                   <option key={cat} value={cat}>{cat}</option>
@@ -197,12 +197,12 @@ export default function CreateMarket() {
                 value={formData.description}
                 onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
                 rows={4}
-                className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent ${
-                  errors.description ? 'border-red-500' : 'border-gray-300'
+                className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-info focus:border-transparent ${
+                  errors.description ? 'border-error' : 'border-gray-300'
                 }`}
                 placeholder="Provide detailed information about the market, including resolution criteria..."
               />
-              {errors.description && <p className="text-red-500 text-sm mt-1">{errors.description}</p>}
+              {errors.description && <p className="text-error text-sm mt-1">{errors.description}</p>}
             </div>
 
             {/* End Date/Time */}
@@ -216,11 +216,11 @@ export default function CreateMarket() {
                   value={formData.endDate}
                   onChange={(e) => setFormData(prev => ({ ...prev, endDate: e.target.value }))}
                   min={new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split('T')[0]}
-                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent ${
-                    errors.endDate ? 'border-red-500' : 'border-gray-300'
+                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-info focus:border-transparent ${
+                    errors.endDate ? 'border-error' : 'border-gray-300'
                   }`}
                 />
-                {errors.endDate && <p className="text-red-500 text-sm mt-1">{errors.endDate}</p>}
+                {errors.endDate && <p className="text-error text-sm mt-1">{errors.endDate}</p>}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -230,7 +230,7 @@ export default function CreateMarket() {
                   type="time"
                   value={formData.endTime}
                   onChange={(e) => setFormData(prev => ({ ...prev, endTime: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-info focus:border-transparent"
                 />
               </div>
             </div>
@@ -248,13 +248,13 @@ export default function CreateMarket() {
                       value={outcome}
                       onChange={(e) => updateOutcome(index, e.target.value)}
                       placeholder={`Outcome ${index + 1}`}
-                      className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent"
+                      className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-info focus:border-transparent"
                     />
                     {formData.outcomes.length > 2 && (
                       <button
                         type="button"
                         onClick={() => removeOutcome(index)}
-                        className="px-3 py-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200"
+                        className="px-3 py-2 bg-error-muted text-error rounded-lg hover:bg-error-muted/80"
                       >
                         Remove
                       </button>
@@ -262,7 +262,7 @@ export default function CreateMarket() {
                   </div>
                 ))}
               </div>
-              {errors.outcomes && <p className="text-red-500 text-sm mt-1">{errors.outcomes}</p>}
+              {errors.outcomes && <p className="text-error text-sm mt-1">{errors.outcomes}</p>}
               
               {formData.outcomes.length < 6 && (
                 <button
@@ -283,7 +283,7 @@ export default function CreateMarket() {
               <select
                 value={formData.feePercentage}
                 onChange={(e) => setFormData(prev => ({ ...prev, feePercentage: parseInt(e.target.value) }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-info focus:border-transparent"
               >
                 <option value={1}>1% - Low fee</option>
                 <option value={2}>2% - Standard fee</option>

@@ -91,16 +91,16 @@ export function Navbar({ searchQuery = '', onSearchChange, selectedCategory, onS
             <div className="hidden md:flex items-center gap-6 text-sm">
               <div className="text-right">
                 <div className="text-gray-400">Portfolio</div>
-                <div className="text-green-400 font-medium">${portfolioText}</div>
+                <div className="text-success font-medium">${portfolioText}</div>
               </div>
               <div className="text-right">
                 <div className="text-gray-400">Cash</div>
-                <div className="text-green-400 font-medium">${cashText}</div>
+                <div className="text-success font-medium">${cashText}</div>
               </div>
             </div>
             <Dialog open={open} onOpenChange={setOpen}>
               <DialogTrigger asChild>
-                <Button variant="default" className="bg-blue-600 hover:bg-blue-700">
+                <Button variant="default" className="bg-info hover:bg-info/90">
                   Top up
                 </Button>
               </DialogTrigger>
@@ -130,7 +130,7 @@ export function Navbar({ searchQuery = '', onSearchChange, selectedCategory, onS
                   <div className="text-xs text-gray-400">Funds appear after the transaction confirms.</div>
                   <Button
                     type="button"
-                    className="bg-green-600 hover:bg-green-700 disabled:opacity-50"
+                    className="bg-success hover:bg-success/90 disabled:opacity-50"
                     disabled={faucetLoading}
                     onClick={() => getTokens(amount)}
                   >

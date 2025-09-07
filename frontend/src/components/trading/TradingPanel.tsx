@@ -108,7 +108,7 @@ export function TradingPanel({ market, onPlaceBet, variant = 'dark', isLoading: 
             onClick={() => setSelectedOutcome('yes')}
             className={`py-4 px-4 font-medium transition-all relative ${focusRing} ${
               selectedOutcome === 'yes'
-                ? 'bg-green-600 text-white'
+                ? 'bg-success text-white'
                 : (isLight ? 'bg-gray-100 text-gray-700 hover:bg-gray-200' : 'bg-gray-800 text-gray-200 hover:bg-gray-700')
             }`}
             aria-pressed={selectedOutcome === 'yes'}
@@ -119,7 +119,7 @@ export function TradingPanel({ market, onPlaceBet, variant = 'dark', isLoading: 
             </div>
             <div className="text-lg font-bold">{Math.round(pricing.yesPrice * 100)}¢</div>
             {selectedOutcome === 'yes' && (
-              <div className="absolute inset-0 bg-green-600/20 border-2 border-green-400 rounded-lg"></div>
+              <div className="absolute inset-0 bg-success/20 border-2 border-success rounded-lg"></div>
             )}
           </button>
           
@@ -127,7 +127,7 @@ export function TradingPanel({ market, onPlaceBet, variant = 'dark', isLoading: 
             onClick={() => setSelectedOutcome('no')}
             className={`py-4 px-4 font-medium transition-all relative ${focusRing} ${
               selectedOutcome === 'no'
-                ? 'bg-red-600 text-white'
+                ? 'bg-error text-white'
                 : (isLight ? 'bg-gray-100 text-gray-700 hover:bg-gray-200' : 'bg-gray-800 text-gray-200 hover:bg-gray-700')
             }`}
             aria-pressed={selectedOutcome === 'no'}
@@ -138,7 +138,7 @@ export function TradingPanel({ market, onPlaceBet, variant = 'dark', isLoading: 
             </div>
             <div className="text-lg font-bold">{Math.round(pricing.noPrice * 100)}¢</div>
             {selectedOutcome === 'no' && (
-              <div className="absolute inset-0 bg-red-600/20 border-2 border-red-400 rounded-lg"></div>
+              <div className="absolute inset-0 bg-error/20 border-2 border-error rounded-lg"></div>
             )}
           </button>
         </div>
@@ -187,10 +187,10 @@ export function TradingPanel({ market, onPlaceBet, variant = 'dark', isLoading: 
           
           {/* Validation Error */}
           {validation.error && (
-            <p className="text-sm text-red-300">{validation.error}</p>
+            <p className="text-sm text-error">{validation.error}</p>
           )}
           {!hasSufficientBalance && betAmount && (
-            <p className="text-sm text-red-300">Insufficient balance</p>
+            <p className="text-sm text-error">Insufficient balance</p>
           )}
         </div>
         
@@ -205,13 +205,13 @@ export function TradingPanel({ market, onPlaceBet, variant = 'dark', isLoading: 
             </div>
             <div className="flex justify-between text-sm">
               <span className={`${isLight ? 'text-gray-700' : 'text-gray-200'}`}>You get if right</span>
-              <span className={`font-medium text-lg ${isLight ? 'text-green-600' : 'text-green-300'}`}>
+              <span className={`font-medium text-lg ${isLight ? 'text-success' : 'text-success'}`}>
                 ${(parseFloat(betAmount || '0') / (selectedOutcome === 'yes' ? pricing.yesPrice : pricing.noPrice)).toFixed(2)}
               </span>
             </div>
             <div className="flex justify-between text-xs">
               <span className={`${isLight ? 'text-gray-500' : 'text-gray-400'}`}>Profit</span>
-              <span className={`${isLight ? 'text-green-600' : 'text-green-300'}`}>
+              <span className={`${isLight ? 'text-success' : 'text-success'}`}>
                 ${((parseFloat(betAmount || '0') / (selectedOutcome === 'yes' ? pricing.yesPrice : pricing.noPrice)) - parseFloat(betAmount || '0')).toFixed(2)}
               </span>
             </div>
@@ -224,8 +224,8 @@ export function TradingPanel({ market, onPlaceBet, variant = 'dark', isLoading: 
           disabled={isDisabled}
           className={`w-full py-4 rounded-lg font-bold text-lg transition-all ${
             selectedOutcome === 'yes'
-              ? 'bg-green-600 hover:bg-green-700 disabled:bg-gray-600'
-              : 'bg-red-600 hover:bg-red-700 disabled:bg-gray-600'
+              ? 'bg-success hover:bg-success/90 disabled:bg-gray-600'
+              : 'bg-error hover:bg-error/90 disabled:bg-gray-600'
           } ${isDisabled ? 'opacity-60 cursor-not-allowed' : 'hover:shadow-lg'} text-white`}
         >
           {isLoading ? (

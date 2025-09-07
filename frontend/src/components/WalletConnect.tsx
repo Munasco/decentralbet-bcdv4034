@@ -18,7 +18,7 @@ export function WalletConnect() {
           onClick={() => setIsDropdownOpen(!isDropdownOpen)}
           className="flex items-center space-x-2 bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors"
         >
-          <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+          <div className="w-2 h-2 bg-success rounded-full animate-pulse"></div>
           <span className="hidden sm:inline">
             {address.slice(0, 6)}...{address.slice(-4)}
           </span>
@@ -32,7 +32,7 @@ export function WalletConnect() {
           <div className="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-lg border z-50">
             <div className="p-4 border-b">
               <div className="flex items-center space-x-2 mb-2">
-                <div className="w-3 h-3 bg-green-400 rounded-full"></div>
+                <div className="w-3 h-3 bg-success rounded-full"></div>
                 <span className="text-sm font-medium text-gray-700">Connected</span>
               </div>
               <div className="text-sm text-gray-600 mb-1">
@@ -48,7 +48,7 @@ export function WalletConnect() {
                   disconnect()
                   setIsDropdownOpen(false)
                 }}
-                className="w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                className="w-full text-left px-3 py-2 text-sm text-error hover:bg-error-muted/20 rounded-lg transition-colors"
               >
                 Disconnect Wallet
               </button>

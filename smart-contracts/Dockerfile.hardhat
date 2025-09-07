@@ -1,0 +1,20 @@
+# Hardhat Dockerfile
+FROM node:18-alpine
+
+WORKDIR /app
+
+# Install dependencies
+COPY package*.json ./
+RUN npm ci
+
+# Copy smart contracts
+COPY . .
+
+# Compile contracts
+RUN npx hardhat compile
+
+# Expose Hardhat network port
+EXPOSE 8545
+
+# Start local blockchain
+CMD ["npx", "hardhat", "node", "--hostname", "0.0.0.0"]

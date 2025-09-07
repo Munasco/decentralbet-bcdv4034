@@ -195,23 +195,23 @@ export default function ActivityFeed({ className = '', maxItems = 20 }: Activity
         return (
           <span>
             <span className="text-gray-200">{user}</span> {data.tradeType?.toLowerCase()}s{' '}
-            <span className={`font-medium ${data.outcome === 'YES' ? 'text-green-300' : 'text-red-300'}`}>
+            <span className={`font-medium ${data.outcome === 'YES' ? 'text-success' : 'text-error'}`}>
               {data.outcome}
             </span> for{' '}
             <span className="font-medium text-gray-50">${data.amount}</span> on{' '}
-            <span className="text-blue-300">{shortTitle}</span>
+            <span className="text-info">{shortTitle}</span>
           </span>
         );
 
       case 'large_trade':
         return (
           <span>
-            <span className="text-yellow-300 font-medium">Large trade:</span>{' '}
+            <span className="text-warning font-medium">Large trade:</span>{' '}
             <span className="text-gray-200">{user}</span> {data.tradeType?.toLowerCase()}s{' '}
-            <span className={`font-medium ${data.outcome === 'YES' ? 'text-green-300' : 'text-red-300'}`}>
+            <span className={`font-medium ${data.outcome === 'YES' ? 'text-success' : 'text-error'}`}>
               {data.outcome}
             </span> for{' '}
-            <span className="font-semibold text-yellow-300">${data.amount?.toLocaleString()}</span>
+            <span className="font-semibold text-warning">${data.amount?.toLocaleString()}</span>
           </span>
         );
 
@@ -219,7 +219,7 @@ export default function ActivityFeed({ className = '', maxItems = 20 }: Activity
         return (
           <span>
             New market created:{' '}
-            <span className="text-blue-300">{shortTitle}</span> in{' '}
+            <span className="text-info">{shortTitle}</span> in{' '}
             <span className="text-purple-300">{data.category}</span>
           </span>
         );
@@ -228,9 +228,9 @@ export default function ActivityFeed({ className = '', maxItems = 20 }: Activity
         return (
           <span>
             Market resolved:{' '}
-            <span className="text-blue-300">{shortTitle}</span>{' '}
+            <span className="text-info">{shortTitle}</span>{' '}
             outcome is{' '}
-            <span className={`font-semibold ${data.resolution === 'YES' ? 'text-green-300' : 'text-red-300'}`}>
+            <span className={`font-semibold ${data.resolution === 'YES' ? 'text-success' : 'text-error'}`}>
               {data.resolution}
             </span>
           </span>
@@ -240,7 +240,7 @@ export default function ActivityFeed({ className = '', maxItems = 20 }: Activity
         return (
           <span>
             <span className="text-purple-300 font-medium">{data.milestone}</span> for{' '}
-            <span className="text-blue-300">{shortTitle}</span>
+            <span className="text-info">{shortTitle}</span>
           </span>
         );
 
@@ -256,7 +256,7 @@ export default function ActivityFeed({ className = '', maxItems = 20 }: Activity
         <div className="flex items-center gap-3">
           <h3 className="text-lg font-semibold text-white">Live Activity</h3>
           <div className="flex items-center gap-2">
-            <div className={`w-2 h-2 rounded-full ${isLive ? 'bg-green-500' : 'bg-red-500'}`}></div>
+            <div className={`w-2 h-2 rounded-full ${isLive ? 'bg-success' : 'bg-error'}`}></div>
             <span className="text-xs text-gray-200">{isLive ? 'Live' : 'Paused'}</span>
           </div>
         </div>
@@ -265,8 +265,8 @@ export default function ActivityFeed({ className = '', maxItems = 20 }: Activity
           onClick={() => setIsLive(!isLive)}
           className={`text-xs px-3 py-1 rounded-full transition-colors ${
             isLive 
-              ? 'bg-red-900/30 text-red-400 hover:bg-red-900/50' 
-              : 'bg-green-900/30 text-green-400 hover:bg-green-900/50'
+              ? 'bg-error-muted text-error hover:bg-error-muted/80' 
+              : 'bg-success-muted text-success hover:bg-success-muted/80'
           }`}
         >
           {isLive ? 'Pause' : 'Resume'}
@@ -280,7 +280,7 @@ export default function ActivityFeed({ className = '', maxItems = 20 }: Activity
             <div 
               key={activity.id}
               className={`p-3 hover:bg-gray-800/50 transition-colors border-l-2 ${
-                index === 0 && isLive ? 'border-l-blue-500 bg-blue-900/10' : 'border-l-transparent'
+                index === 0 && isLive ? 'border-l-info bg-info-muted/10' : 'border-l-transparent'
               }`}
             >
               <div className="flex items-start gap-3">

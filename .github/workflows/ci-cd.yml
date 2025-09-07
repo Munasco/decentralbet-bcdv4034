@@ -1,0 +1,286 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  AZURE_CONTAINER_REGISTRY: decentralbetacr.azurecr.io
+  RESOURCE_GROUP: decentralbet-rg
+  CLUSTER_NAME: decentralbet-aks
+  NAMESPACE: decentralbet
+
+jobs:
+  # Smart Contract Testing
+  smart-contract-tests:
+    runs-on: ubuntu-latest
+    name: Smart Contract Tests
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: smart-contracts/package-lock.json
+
+    - name: Install dependencies
+      working-directory: ./smart-contracts
+      run: npm ci
+
+    - name: Compile contracts
+      working-directory: ./smart-contracts
+      run: npx hardhat compile
+
+    - name: Run smart contract tests
+      working-directory: ./smart-contracts
+      run: npm test
+
+    - name: Generate coverage report
+      working-directory: ./smart-contracts
+      run: npx hardhat coverage
+
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./smart-contracts/coverage/lcov.info
+        flags: smart-contracts
+
+  # Backend Testing
+  backend-tests:
+    runs-on: ubuntu-latest
+    name: Backend API Tests
+    
+    services:
+      mongodb:
+        image: mongo:7.0
+        env:
+          MONGO_INITDB_ROOT_USERNAME: admin
+          MONGO_INITDB_ROOT_PASSWORD: password123
+        ports:
+          - 27017:27017
+      
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: backend/package-lock.json
+
+    - name: Install dependencies
+      working-directory: ./backend
+      run: npm ci
+
+    - name: Run linting
+      working-directory: ./backend
+      run: npm run lint || true
+
+    - name: Run backend tests
+      working-directory: ./backend
+      run: npm test
+      env:
+        NODE_ENV: test
+        MONGODB_URI: mongodb://admin:password123@localhost:27017/decentralbet_test?authSource=admin
+        REDIS_URL: redis://localhost:6379
+        JWT_SECRET: test-secret
+
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./backend/coverage/lcov.info
+        flags: backend
+
+  # Frontend Testing & Build
+  frontend-tests:
+    runs-on: ubuntu-latest
+    name: Frontend Tests & Build
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: frontend/package-lock.json
+
+    - name: Install dependencies
+      working-directory: ./frontend
+      run: npm ci
+
+    - name: Run linting
+      working-directory: ./frontend
+      run: npm run lint
+
+    - name: Run type checking
+      working-directory: ./frontend
+      run: npm run type-check || true
+
+    - name: Run frontend tests
+      working-directory: ./frontend
+      run: npm test
+
+    - name: Build application
+      working-directory: ./frontend
+      run: npm run build
+      env:
+        NEXT_PUBLIC_API_URL: https://api.decentralbet.azurewebsites.net/api/v1
+        NEXT_PUBLIC_WS_URL: wss://api.decentralbet.azurewebsites.net
+
+  # Security Scanning
+  security-scan:
+    runs-on: ubuntu-latest
+    name: Security Scan
+    needs: [backend-tests, frontend-tests]
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Run Trivy vulnerability scanner
+      uses: aquasecurity/trivy-action@master
+      with:
+        scan-type: 'fs'
+        scan-ref: '.'
+        format: 'sarif'
+        output: 'trivy-results.sarif'
+
+    - name: Upload Trivy scan results to GitHub Security tab
+      uses: github/codeql-action/upload-sarif@v2
+      if: always()
+      with:
+        sarif_file: 'trivy-results.sarif'
+
+  # Build and Push Docker Images
+  build-and-push:
+    runs-on: ubuntu-latest
+    name: Build & Push Images
+    needs: [smart-contract-tests, backend-tests, frontend-tests, security-scan]
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Azure Container Registry Login
+      uses: azure/docker-login@v1
+      with:
+        login-server: ${{ env.AZURE_CONTAINER_REGISTRY }}
+        username: ${{ secrets.AZURE_ACR_USERNAME }}
+        password: ${{ secrets.AZURE_ACR_PASSWORD }}
+
+    - name: Build and push backend image
+      run: |
+        docker build -t ${{ env.AZURE_CONTAINER_REGISTRY }}/decentralbet-backend:${{ github.sha }} \
+                     -t ${{ env.AZURE_CONTAINER_REGISTRY }}/decentralbet-backend:latest \
+                     --target production \
+                     ./backend
+        docker push ${{ env.AZURE_CONTAINER_REGISTRY }}/decentralbet-backend:${{ github.sha }}
+        docker push ${{ env.AZURE_CONTAINER_REGISTRY }}/decentralbet-backend:latest
+
+    - name: Build and push frontend image
+      run: |
+        docker build -t ${{ env.AZURE_CONTAINER_REGISTRY }}/decentralbet-frontend:${{ github.sha }} \
+                     -t ${{ env.AZURE_CONTAINER_REGISTRY }}/decentralbet-frontend:latest \
+                     --target production \
+                     ./frontend
+        docker push ${{ env.AZURE_CONTAINER_REGISTRY }}/decentralbet-frontend:${{ github.sha }}
+        docker push ${{ env.AZURE_CONTAINER_REGISTRY }}/decentralbet-frontend:latest
+
+  # Deploy to AKS
+  deploy-to-aks:
+    runs-on: ubuntu-latest
+    name: Deploy to AKS
+    needs: build-and-push
+    if: github.ref == 'refs/heads/main'
+    environment: production
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Azure Login
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+    - name: Set up kubectl
+      uses: azure/setup-kubectl@v3
+      with:
+        version: 'v1.28.0'
+
+    - name: Get AKS credentials
+      run: |
+        az aks get-credentials --resource-group ${{ env.RESOURCE_GROUP }} --name ${{ env.CLUSTER_NAME }}
+
+    - name: Update image tags in manifests
+      run: |
+        sed -i 's|image: .*/decentralbet-backend:.*|image: ${{ env.AZURE_CONTAINER_REGISTRY }}/decentralbet-backend:${{ github.sha }}|g' k8s/backend.yaml
+        sed -i 's|image: .*/decentralbet-frontend:.*|image: ${{ env.AZURE_CONTAINER_REGISTRY }}/decentralbet-frontend:${{ github.sha }}|g' k8s/frontend.yaml
+
+    - name: Deploy to Kubernetes
+      run: |
+        kubectl apply -f k8s/namespace.yaml
+        kubectl apply -f k8s/backend.yaml
+        kubectl apply -f k8s/frontend.yaml
+        kubectl apply -f k8s/ingress.yaml
+
+    - name: Verify deployment
+      run: |
+        kubectl rollout status deployment/backend -n ${{ env.NAMESPACE }} --timeout=300s
+        kubectl rollout status deployment/frontend -n ${{ env.NAMESPACE }} --timeout=300s
+
+    - name: Run smoke tests
+      run: |
+        # Wait for ingress to be ready
+        sleep 30
+        
+        # Test health endpoints
+        kubectl get ingress -n ${{ env.NAMESPACE }}
+        
+        # Get external IP and test
+        EXTERNAL_IP=$(kubectl get ingress decentralbet-ingress -n ${{ env.NAMESPACE }} -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+        if [ ! -z "$EXTERNAL_IP" ]; then
+          curl -f http://$EXTERNAL_IP/api/v1/health || exit 1
+          echo "✅ Backend health check passed"
+          
+          curl -f http://$EXTERNAL_IP/ || exit 1
+          echo "✅ Frontend health check passed"
+        fi
+
+  # Notify on success/failure
+  notify:
+    runs-on: ubuntu-latest
+    name: Notify Deployment Status
+    needs: deploy-to-aks
+    if: always()
+    
+    steps:
+    - name: Notify on success
+      if: needs.deploy-to-aks.result == 'success'
+      run: |
+        echo "🚀 Deployment successful!"
+        echo "Application URL: https://decentralbet.azurewebsites.net"
+        echo "API URL: https://api.decentralbet.azurewebsites.net"
+
+    - name: Notify on failure
+      if: needs.deploy-to-aks.result == 'failure'
+      run: |
+        echo "❌ Deployment failed!"
+        exit 1

@@ -115,7 +115,7 @@ export default function OrderBook({ marketId, yesPrice, noPrice, className = '' 
           {/* Background bar showing depth */}
           <div 
             className={`absolute left-0 top-0 h-full opacity-10 ${
-              outcome === 'YES' ? 'bg-green-500' : 'bg-red-500'
+              outcome === 'YES' ? 'bg-success' : 'bg-error'
             }`}
             style={{ 
               width: `${orders.length > 0 ? (order.total / Math.max(...orders.map(o => o.total))) * 100 : 0}%` 
@@ -123,7 +123,7 @@ export default function OrderBook({ marketId, yesPrice, noPrice, className = '' 
           />
           
           <span className={`font-mono flex items-center gap-1 ${
-            outcome === 'YES' ? 'text-green-300' : 'text-red-300'
+            outcome === 'YES' ? 'text-success' : 'text-error'
           }`}>
             <span className="text-xs" role="img" aria-label={outcome === 'YES' ? 'bullish' : 'bearish'}>
               {outcome === 'YES' ? '↗️' : '↘️'}
@@ -175,8 +175,8 @@ export default function OrderBook({ marketId, yesPrice, noPrice, className = '' 
             {/* YES Orders */}
             <div>
               <div className="flex items-center gap-2 px-3 py-2 bg-gray-800/50">
-                <div className="w-3 h-3 rounded-full bg-green-500"></div>
-                <span className="text-sm font-medium text-green-400">YES</span>
+                <div className="w-3 h-3 rounded-full bg-success"></div>
+                <span className="text-sm font-medium text-success">YES</span>
                 <span className="text-xs text-gray-400 ml-auto">
                   {yesPrice.toFixed(1)}¢
                 </span>
@@ -190,8 +190,8 @@ export default function OrderBook({ marketId, yesPrice, noPrice, className = '' 
             {/* NO Orders */}
             <div>
               <div className="flex items-center gap-2 px-3 py-2 bg-gray-800/50">
-                <div className="w-3 h-3 rounded-full bg-red-500"></div>
-                <span className="text-sm font-medium text-red-400">NO</span>
+                <div className="w-3 h-3 rounded-full bg-error"></div>
+                <span className="text-sm font-medium text-error">NO</span>
                 <span className="text-xs text-gray-400 ml-auto">
                   {noPrice.toFixed(1)}¢
                 </span>
@@ -217,7 +217,7 @@ export default function OrderBook({ marketId, yesPrice, noPrice, className = '' 
                   {formatTime(trade.timestamp)}
                 </span>
                 <span className={`font-medium ${
-                  trade.outcome === 'YES' ? 'text-green-400' : 'text-red-400'
+                  trade.outcome === 'YES' ? 'text-success' : 'text-error'
                 }`}>
                   {trade.outcome}
                 </span>

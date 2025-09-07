@@ -104,13 +104,13 @@ export function MarketChart({
         </p>
         <div className="space-y-1">
           <div className="flex items-center justify-between">
-            <span className="text-xs text-green-300">Yes</span>
+            <span className="text-xs text-success">Yes</span>
             <span className="text-sm font-medium text-gray-50">
               {Math.round(yesPrice * 100)}¢
             </span>
           </div>
           <div className="flex items-center justify-between">
-            <span className="text-xs text-red-300">No</span>
+            <span className="text-xs text-error">No</span>
             <span className="text-sm font-medium text-gray-50">
               {Math.round(noPrice * 100)}¢
             </span>
@@ -136,14 +136,14 @@ export function MarketChart({
           <h3 className="text-lg font-semibold text-white">Price Chart</h3>
           <div className="flex items-center space-x-2 text-sm">
             <div className="flex items-center">
-              <div className="w-3 h-0.5 bg-green-500 mr-2"></div>
-              <span className="text-green-300">
+              <div className="w-3 h-0.5 bg-success mr-2"></div>
+              <span className="text-success">
                 Yes {Math.round(currentYesPrice * 100)}¢
               </span>
             </div>
             <div className="flex items-center">
-              <div className="w-3 h-0.5 bg-red-500 mr-2"></div>
-              <span className="text-red-300">
+              <div className="w-3 h-0.5 bg-error mr-2"></div>
+              <span className="text-error">
                 No {Math.round(currentNoPrice * 100)}¢
               </span>
             </div>
@@ -155,7 +155,7 @@ export function MarketChart({
             onClick={() => setShowVolume(!showVolume)}
             className={`px-3 py-1 text-xs rounded ${
               showVolume 
-                ? 'bg-blue-600 text-white' 
+                ? 'bg-info text-white' 
                 : 'bg-gray-800 text-gray-200 hover:bg-gray-700'
             }`}
           >
@@ -202,7 +202,7 @@ export function MarketChart({
               <Line 
                 type="monotone" 
                 dataKey="yesPrice" 
-                stroke="#10b981"
+                stroke="var(--success)"
                 strokeWidth={2}
                 dot={false}
                 connectNulls
@@ -210,7 +210,7 @@ export function MarketChart({
               <Line 
                 type="monotone" 
                 dataKey="noPrice" 
-                stroke="#ef4444" 
+                stroke="var(--error)"
                 strokeWidth={2}
                 dot={false}
                 connectNulls
@@ -230,7 +230,7 @@ export function MarketChart({
               onClick={() => setSelectedPeriod(period.value)}
               className={`px-3 py-1 text-xs rounded transition-colors ${
                 selectedPeriod === period.value
-                  ? 'bg-blue-600 text-white'
+                  ? 'bg-info text-white'
                   : 'bg-gray-800 text-gray-400 hover:bg-gray-700 hover:text-gray-300'
               }`}
             >
@@ -246,7 +246,7 @@ export function MarketChart({
           Volume: <span className="text-white">${formatUSDC(totalVolume)}</span>
         </div>
         <div className="text-xs text-gray-400">
-          24h Change: <span className="text-green-400">+2.4%</span>
+          24h Change: <span className="text-success">+2.4%</span>
         </div>
       </div>
     </div>

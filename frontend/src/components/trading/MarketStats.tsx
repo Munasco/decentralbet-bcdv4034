@@ -162,8 +162,8 @@ export default function MarketStats({ marketId, marketData, pricing, className =
             <div className="text-lg font-semibold text-gray-50 mb-1">{stat.value}</div>
             {stat.subtext && (
               <div className={`text-xs flex items-center gap-1 ${
-                stat.trend === 'up' ? 'text-green-300' : 
-                stat.trend === 'down' ? 'text-red-300' : 
+                stat.trend === 'up' ? 'text-success' : 
+                stat.trend === 'down' ? 'text-error' : 
                 'text-gray-300'
               }`}>
                 {stat.trend === 'up' && <TrendingUp className="w-3 h-3" />}
@@ -210,8 +210,8 @@ export default function MarketStats({ marketId, marketData, pricing, className =
                       variant={holder.position === 'YES' ? 'default' : 'secondary'}
                       className={`text-xs ${
                         holder.position === 'YES' 
-                          ? 'bg-green-600/20 text-green-300 border-green-600/30' 
-                          : 'bg-red-600/20 text-red-300 border-red-600/30'
+                          ? 'bg-success-muted text-success border-success/30' 
+                          : 'bg-error-muted text-error border-error/30'
                       }`}
                     >
                       {holder.position}
@@ -223,7 +223,7 @@ export default function MarketStats({ marketId, marketData, pricing, className =
               <div className="text-right">
                 <div className="text-sm font-medium text-gray-200">${holder.value.toFixed(2)}</div>
                 <div className={`text-xs ${
-                  holder.pnl > 0 ? 'text-green-300' : 'text-red-300'
+                  holder.pnl > 0 ? 'text-success' : 'text-error'
                 }`}>
                   {holder.pnl > 0 ? '+' : ''}${holder.pnl.toFixed(2)}
                 </div>
@@ -238,7 +238,7 @@ export default function MarketStats({ marketId, marketData, pricing, className =
   const ActivityTab = () => (
     <div className="space-y-4">
       <div className="flex items-center gap-2 mb-4">
-        <Activity className="w-4 h-4 text-blue-500" />
+        <Activity className="w-4 h-4 text-info" />
         <span className="text-sm font-medium text-gray-200">Live Activity</span>
       </div>
       <ScrollArea className="h-96">
@@ -246,8 +246,8 @@ export default function MarketStats({ marketId, marketData, pricing, className =
           {marketActivity.map((activity) => (
             <div key={activity.id} className="flex items-start gap-3 p-3 bg-gray-800/30 rounded-lg border border-gray-700/50">
               <div className={`w-2 h-2 rounded-full mt-2 ${
-                activity.significance === 'high' ? 'bg-red-500' : 
-                activity.significance === 'medium' ? 'bg-yellow-500' : 'bg-blue-500'
+                activity.significance === 'high' ? 'bg-error' : 
+                activity.significance === 'medium' ? 'bg-warning' : 'bg-info'
               }`}></div>
               <div className="flex-1">
                 <div className="flex items-center justify-between">
@@ -291,9 +291,9 @@ export default function MarketStats({ marketId, marketData, pricing, className =
                     <Badge 
                       variant="outline" 
                       className={`text-xs ${
-                        insight.category === 'news' ? 'border-blue-600/50 text-blue-300' :
-                        insight.category === 'social' ? 'border-green-600/50 text-green-300' :
-                        insight.category === 'analysis' ? 'border-yellow-600/50 text-yellow-300' :
+                        insight.category === 'news' ? 'border-info/50 text-info' :
+                        insight.category === 'social' ? 'border-success/50 text-success' :
+                        insight.category === 'analysis' ? 'border-warning/50 text-warning' :
                         'border-purple-600/50 text-purple-300'
                       }`}
                     >

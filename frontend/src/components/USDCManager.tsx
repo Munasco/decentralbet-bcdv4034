@@ -40,7 +40,7 @@ export function USDCManager() {
     <div className="bg-gray-900 rounded-lg border border-gray-800 p-6">
       <div className="text-center mb-4">
         <h3 className="text-xl font-bold text-gray-50">💰 Your USDC Balance</h3>
-        <div className="text-3xl font-bold text-blue-300 mt-2">
+        <div className="text-3xl font-bold text-info mt-2">
           {formatUSDC(balance)} USDC
         </div>
       </div>
@@ -54,15 +54,15 @@ export function USDCManager() {
             min="1"
             max="1000"
             step="1"
-            className={`w-32 px-3 py-2 border rounded-lg text-center bg-gray-800 text-gray-50 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-              error ? 'border-red-600' : 'border-gray-600'
+            className={`w-32 px-3 py-2 border rounded-lg text-center bg-gray-800 text-gray-50 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-info focus:border-transparent ${
+              error ? 'border-error' : 'border-gray-600'
             }`}
             placeholder="1000"
           />
           <button
             onClick={handleGetTokens}
             disabled={isLoading || !!error || !amount}
-            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 font-medium transition-colors"
+            className="px-6 py-2 bg-info text-white rounded-lg hover:bg-info/90 disabled:opacity-50 font-medium transition-colors"
           >
             {isLoading ? '⏳ Getting...' : '🎁 Get Free USDC'}
           </button>
@@ -70,7 +70,7 @@ export function USDCManager() {
         
         {error && (
           <div className="text-center">
-            <p className="text-sm text-red-300">{error}</p>
+            <p className="text-sm text-error">{error}</p>
           </div>
         )}
       </div>
@@ -79,7 +79,7 @@ export function USDCManager() {
         <p className="text-sm text-gray-300">
           Get free test tokens to bet on prediction markets!
         </p>
-        <p className="text-xs text-green-300 mt-1">
+        <p className="text-xs text-success mt-1">
           ✅ Minimum bet: 0.01 USDC • Maximum faucet: 1,000 USDC per request
         </p>
       </div>
