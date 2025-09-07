@@ -1,15 +1,15 @@
 {
-  "name": "decentralvote-smart-contracts",
+  "name": "decentralbet-smart-contracts",
   "version": "1.0.0",
-  "description": "Smart contracts for DecentralVote blockchain voting platform",
+  "description": "Smart contracts for DecentralBet blockchain prediction market platform",
   "main": "index.js",
-  "type": "module",
   "scripts": {
     "build": "npx hardhat compile",
     "test": "npx hardhat test",
-    "deploy:local": "npx hardhat run scripts/deploy.ts --network localhost",
-    "deploy:sepolia": "npx hardhat run scripts/deploy.ts --network sepolia",
-    "deploy": "npx hardhat run scripts/deploy.ts",
+    "deploy:local": "npx hardhat run scripts/deploy.js --network localhost",
+    "deploy:sepolia": "npx hardhat run scripts/deploy.js --network sepolia",
+    "deploy:polygon": "npx hardhat run scripts/deploy.js --network polygon",
+    "deploy": "npx hardhat run scripts/deploy.js",
     "node": "npx hardhat node",
     "clean": "npx hardhat clean",
     "coverage": "npx hardhat coverage"
@@ -17,9 +17,10 @@
   "keywords": [
     "blockchain",
     "ethereum",
-    "voting",
+    "prediction-markets",
     "dapp",
-    "smart-contracts"
+    "smart-contracts",
+    "defi"
   ],
   "author": "BCDV 4034 - George Brown College",
   "license": "MIT",
