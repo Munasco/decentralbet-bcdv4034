@@ -33,43 +33,21 @@ jobs:
           terraform init
           
           SUB_ID=$(az account show --query id -o tsv)
+          RG_ID="/subscriptions/$SUB_ID/resourceGroups/${{ env.RESOURCE_GROUP }}"
           
-          # Import existing resources if they exist
-          if az group show --name ${{ env.RESOURCE_GROUP }} >/dev/null 2>&1; then
-            terraform import azurerm_resource_group.main /subscriptions/$SUB_ID/resourceGroups/${{ env.RESOURCE_GROUP }} || true
-          fi
+          # Always attempt imports (safe to ignore failures with || true)
+          terraform import azurerm_resource_group.main "$RG_ID" || true
+          terraform import azurerm_container_registry.main "$RG_ID/providers/Microsoft.ContainerRegistry/registries/decentralbetacr" || true
+          terraform import azurerm_virtual_network.main "$RG_ID/providers/Microsoft.Network/virtualNetworks/decentralbet-vnet" || true
+          terraform import azurerm_subnet.aks "$RG_ID/providers/Microsoft.Network/virtualNetworks/decentralbet-vnet/subnets/decentralbet-aks-subnet" || true
+          terraform import azurerm_log_analytics_workspace.main "$RG_ID/providers/Microsoft.OperationalInsights/workspaces/decentralbet-logs" || true
+          terraform import azurerm_kubernetes_cluster.main "$RG_ID/providers/Microsoft.ContainerService/managedClusters/${{ env.CLUSTER_NAME }}" || true
+          terraform import azurerm_public_ip.gateway "$RG_ID/providers/Microsoft.Network/publicIPAddresses/decentralbet-gateway-ip" || true
+          terraform import azurerm_subnet.gateway "$RG_ID/providers/Microsoft.Network/virtualNetworks/decentralbet-vnet/subnets/decentralbet-gateway-subnet" || true
+          terraform import azurerm_application_gateway.main "$RG_ID/providers/Microsoft.Network/applicationGateways/decentralbet-appgateway" || true
           
-          if az acr show --name decentralbetacr --resource-group ${{ env.RESOURCE_GROUP }} >/dev/null 2>&1; then
-            terraform import azurerm_container_registry.main /subscriptions/$SUB_ID/resourceGroups/${{ env.RESOURCE_GROUP }}/providers/Microsoft.ContainerRegistry/registries/decentralbetacr || true
-          fi
-          
-          if az network vnet show --name decentralbet-vnet --resource-group ${{ env.RESOURCE_GROUP }} >/dev/null 2>&1; then
-            terraform import azurerm_virtual_network.main /subscriptions/$SUB_ID/resourceGroups/${{ env.RESOURCE_GROUP }}/providers/Microsoft.Network/virtualNetworks/decentralbet-vnet || true
-          fi
-          
-          if az network vnet subnet show --vnet-name decentralbet-vnet --name decentralbet-aks-subnet --resource-group ${{ env.RESOURCE_GROUP }} >/dev/null 2>&1; then
-            terraform import azurerm_subnet.aks /subscriptions/$SUB_ID/resourceGroups/${{ env.RESOURCE_GROUP }}/providers/Microsoft.Network/virtualNetworks/decentralbet-vnet/subnets/decentralbet-aks-subnet || true
-          fi
-          
-          if az monitor log-analytics workspace show --workspace-name decentralbet-logs --resource-group ${{ env.RESOURCE_GROUP }} >/dev/null 2>&1; then
-            terraform import azurerm_log_analytics_workspace.main /subscriptions/$SUB_ID/resourcegroups/${{ env.RESOURCE_GROUP }}/providers/microsoft.operationalinsights/workspaces/decentralbet-logs || true
-          fi
-          
-          if az aks show --resource-group ${{ env.RESOURCE_GROUP }} --name ${{ env.CLUSTER_NAME }} >/dev/null 2>&1; then
-            terraform import azurerm_kubernetes_cluster.main /subscriptions/$SUB_ID/resourcegroups/${{ env.RESOURCE_GROUP }}/providers/Microsoft.ContainerService/managedClusters/${{ env.CLUSTER_NAME }} || true
-          fi
-          
-          if az network public-ip show --name decentralbet-gateway-ip --resource-group ${{ env.RESOURCE_GROUP }} >/dev/null 2>&1; then
-            terraform import azurerm_public_ip.gateway /subscriptions/$SUB_ID/resourceGroups/${{ env.RESOURCE_GROUP }}/providers/Microsoft.Network/publicIPAddresses/decentralbet-gateway-ip || true
-          fi
-          
-          if az network vnet subnet show --vnet-name decentralbet-vnet --name decentralbet-gateway-subnet --resource-group ${{ env.RESOURCE_GROUP }} >/dev/null 2>&1; then
-            terraform import azurerm_subnet.gateway /subscriptions/$SUB_ID/resourceGroups/${{ env.RESOURCE_GROUP }}/providers/Microsoft.Network/virtualNetworks/decentralbet-vnet/subnets/decentralbet-gateway-subnet || true
-          fi
-          
-          if az network application-gateway show --name decentralbet-appgateway --resource-group ${{ env.RESOURCE_GROUP }} >/dev/null 2>&1; then
-            terraform import azurerm_application_gateway.main /subscriptions/$SUB_ID/resourceGroups/${{ env.RESOURCE_GROUP }}/providers/Microsoft.Network/applicationGateways/decentralbet-appgateway || true
-          fi
+          # Optional: show current state for debugging
+          terraform state list || true
 
       - name: Terraform apply
         run: |
