@@ -27,11 +27,32 @@ A full-stack decentralized prediction market platform built with Next.js, Node.j
 - **Enterprise Ready**: Complete CI/CD, monitoring, and deployment automation
 
 ### **🚀 Live Demo & Resources**
-- **Frontend**: http://localhost:3000
-- **Backend API**: http://localhost:5000/api/v1
-- **Blockchain**: Ethereum Sepolia testnet
-- **Smart Contracts**: [View on Etherscan](https://sepolia.etherscan.io/address/0x70ff7fedDb900f9e254aEfA8b9b8f81f5d770460)
-- **Documentation**: [AKS Deployment Guide](./docs/AKS-DEPLOYMENT.md)
+- **🌐 Live Application**: [http://20.232.231.105](http://20.232.231.105)
+- **🔧 Backend API**: [http://20.232.231.105/api/v1/info](http://20.232.231.105/api/v1/info)
+- **⛓️ Blockchain**: Ethereum Sepolia testnet
+- **📜 Smart Contracts**: [View on Etherscan](https://sepolia.etherscan.io/address/0x70ff7fedDb900f9e254aEfA8b9b8f81f5d770460)
+- **🎥 Demo Video**: [Watch Demo](https://your-video-link-here)
+- **📸 Project Screenshots**: [View Screenshots](#-deployment-screenshots)
+
+---
+
+## 📸 **Deployment Screenshots**
+
+### 1. **Terraform Infrastructure Deployment**
+![Terraform Deployment](./screenshots/terraform-run.png)
+*Infrastructure as Code deployment showing AKS cluster, ACR, and networking resources*
+
+### 2. **CI/CD Pipeline Success**
+![CI/CD Pipeline](./screenshots/ci-cd-success.png)
+*GitHub Actions workflow successfully building and deploying the application*
+
+### 3. **AKS Cluster Deployment**
+![AKS Deployment](./screenshots/aks-deployment-success.png)
+*Kubernetes cluster showing running pods, services, and auto-scaling configuration*
+
+### 4. **Live Frontend Application**
+![Frontend Application](./screenshots/frontend-run.png)
+*Production application running on public IP with full blockchain integration*
 
 ---
 
@@ -145,7 +166,7 @@ az aks get-credentials --resource-group myResourceGroup --name myAKSCluster
 kubectl apply -f k8s/
 ```
 
-For detailed deployment instructions, see [AKS Deployment Guide](./docs/AKS-DEPLOYMENT.md).
+**🚀 Live Deployment**: The application is currently running at [http://20.232.231.105](http://20.232.231.105)
 
 ---
 
