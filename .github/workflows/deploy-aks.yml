@@ -31,7 +31,7 @@ jobs:
 
       - name: Azure CLI Login with Managed Identity
         run: |
-          az login --identity --client-id 41c6da1d-d60b-429b-a013-c1763411cf05
+          az login --identity
 
       - name: Create AKS Cluster
         run: |
