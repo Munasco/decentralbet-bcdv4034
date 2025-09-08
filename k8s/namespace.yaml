@@ -2,6 +2,7 @@ apiVersion: v1
 kind: Namespace
 metadata:
   name: decentralbet
+  # Updated for AKS deployment
   labels:
     name: decentralbet
     environment: production
