@@ -1,10 +1,11 @@
 name: CI/CD Pipeline - Test and Deploy to AKS
 
 on:
-  push:
-    branches: [ main, develop ]
-  pull_request:
-    branches: [ main ]
+  # Disabled - using self-hosted runner deployment instead
+  # push:
+  #   branches: [ main, develop ]
+  # pull_request:
+  #   branches: [ main ]
   workflow_dispatch: # Allow manual triggering
 
 env:

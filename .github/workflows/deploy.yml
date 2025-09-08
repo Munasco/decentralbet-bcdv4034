@@ -1,10 +1,11 @@
 name: Deploy to AKS
 
 on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
+  # Disabled - using self-hosted runner deployment instead
+  # push:
+  #   branches: [main]
+  # pull_request:
+  #   branches: [main]
   workflow_dispatch:
 
 env:
