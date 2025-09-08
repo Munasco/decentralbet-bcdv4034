@@ -24,7 +24,7 @@ spec:
       serviceAccountName: decentralbet-sa
       containers:
       - name: backend
-        image: dbacr1757292120.azurecr.io/decentralbet-backend:latest
+        image: decentralbetacr.azurecr.io/decentralbet-backend:latest
         imagePullPolicy: Always
         ports:
         - containerPort: 3001
