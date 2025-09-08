@@ -3,14 +3,8 @@ name: Deploy to AKS
 on:
   push:
     branches: [ main ]
-    paths: 
-      - 'k8s/**'
-      - 'terraform/**'
   pull_request:
     branches: [ main ]
-    paths:
-      - 'k8s/**'
-      - 'terraform/**'
     types: [ closed ]
   workflow_dispatch:
 
