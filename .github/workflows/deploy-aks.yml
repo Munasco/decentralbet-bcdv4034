@@ -55,6 +55,12 @@ jobs:
           terraform plan -out=tfplan
           terraform apply -auto-approve tfplan
 
+      - name: Ensure AcrPull for AKS kubelet
+        run: |
+          KUBELET_OID=$(az aks show --resource-group ${{ env.RESOURCE_GROUP }} --name ${{ env.CLUSTER_NAME }} --query identityProfile.kubeletidentity.objectId -o tsv)
+          ACR_ID=$(az acr show --name ${{ env.ACR_NAME }} --resource-group ${{ env.RESOURCE_GROUP }} --query id -o tsv)
+          az role assignment create --assignee "$KUBELET_OID" --role AcrPull --scope "$ACR_ID" || true
+
       - name: ACR login
         run: |
           az acr login --name ${{ env.ACR_NAME }}
