@@ -44,18 +44,20 @@ jobs:
       - name: Azure login
         run: az login --identity
 
-      - name: Create AKS cluster
+      - name: Terraform init
         run: |
-          if ! az aks show --resource-group ${{ env.RESOURCE_GROUP }} --name ${{ env.CLUSTER_NAME }} --query name -o tsv 2>/dev/null; then
-            az aks create \
-              --resource-group ${{ env.RESOURCE_GROUP }} \
-              --name ${{ env.CLUSTER_NAME }} \
-              --node-count 1 \
-              --enable-addons monitoring \
-              --generate-ssh-keys \
-              --location ${{ env.LOCATION }} \
-              --yes
-          fi
+          cd terraform
+          terraform init
+
+      - name: Terraform plan
+        run: |
+          cd terraform
+          terraform plan -out=tfplan
+
+      - name: Terraform apply
+        run: |
+          cd terraform
+          terraform apply -auto-approve tfplan
 
       - name: Get AKS credentials
         run: |
@@ -67,19 +69,18 @@ jobs:
 
       - name: Deploy
         run: |
-          kubectl create namespace blockchain-app --dry-run=client -o yaml | kubectl apply -f -
-          kubectl apply -f k8s/ -n blockchain-app
+          kubectl apply -f k8s/
           sleep 30
-          kubectl get all -n blockchain-app
-          if kubectl get deployment frontend-deployment -n blockchain-app 2>/dev/null; then
-            kubectl wait --for=condition=available --timeout=300s deployment/frontend-deployment -n blockchain-app
+          kubectl get all -n decentralbet
+          if kubectl get deployment frontend -n decentralbet 2>/dev/null; then
+            kubectl wait --for=condition=available --timeout=300s deployment/frontend -n decentralbet
           fi
-          if kubectl get deployment backend-deployment -n blockchain-app 2>/dev/null; then
-            kubectl wait --for=condition=available --timeout=300s deployment/backend-deployment -n blockchain-app
+          if kubectl get deployment backend -n decentralbet 2>/dev/null; then
+            kubectl wait --for=condition=available --timeout=300s deployment/backend -n decentralbet
           fi
 
       - name: Status
         run: |
-          kubectl get all -n blockchain-app
-          kubectl get services -n blockchain-app
-          kubectl get pods -n blockchain-app
+          kubectl get all -n decentralbet
+          kubectl get services -n decentralbet
+          kubectl get pods -n decentralbet

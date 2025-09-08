@@ -31,7 +31,7 @@ spec:
           app: frontend
     ports:
     - protocol: TCP
-      port: 5000
+      port: 3001
 
 ---
 # Allow backend to database communication
@@ -110,7 +110,7 @@ spec:
           name: ingress-nginx
     ports:
     - protocol: TCP
-      port: 5000
+      port: 3001
 
 ---
 # Allow monitoring to scrape metrics
@@ -154,7 +154,7 @@ spec:
           name: load-testing
     ports:
     - protocol: TCP
-      port: 5000
+      port: 3001
 
 ---
 # Allow health check from any namespace (for load balancer probes)
@@ -171,7 +171,7 @@ spec:
   - from: []
     ports:
     - protocol: TCP
-      port: 5000
+      port: 3001
     - protocol: TCP
       port: 3000
   # Only allow specific health check endpoints (this would need application-level filtering)
