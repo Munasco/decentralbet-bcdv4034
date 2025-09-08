@@ -25,6 +25,7 @@ spec:
       containers:
       - name: backend
         image: dbacr1757292120.azurecr.io/decentralbet-backend:latest
+        imagePullPolicy: Always
         ports:
         - containerPort: 3001
         envFrom:
