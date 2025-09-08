@@ -156,14 +156,14 @@ jobs:
         output: 'trivy-results.sarif'
 
     - name: Upload Trivy scan results to GitHub Security tab
-      uses: github/codeql-action/upload-sarif@v2
+      uses: github/codeql-action/upload-sarif@v3
       if: always()
       with:
         sarif_file: 'trivy-results.sarif'
 
-  build-and-push:
+  deploy-to-vm:
     runs-on: ubuntu-latest
-    name: Build & Push Images
+    name: Deploy to Azure VM
     needs: [smart-contract-tests, backend-tests, frontend-tests, security-scan]
     if: github.ref == 'refs/heads/main'
     
@@ -171,103 +171,71 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    - name: Azure Container Registry Login
-      uses: azure/docker-login@v1
-      with:
-        login-server: ${{ env.AZURE_CONTAINER_REGISTRY }}
-        username: ${{ secrets.AZURE_ACR_USERNAME }}
-        password: ${{ secrets.AZURE_ACR_PASSWORD }}
-
-    - name: Build and push backend image
+    - name: Setup SSH Key
       run: |
-        docker build -t ${{ env.AZURE_CONTAINER_REGISTRY }}/decentralbet-backend:${{ github.sha }} \
-                     -t ${{ env.AZURE_CONTAINER_REGISTRY }}/decentralbet-backend:latest \
-                     --target production \
-                     ./backend
-        docker push ${{ env.AZURE_CONTAINER_REGISTRY }}/decentralbet-backend:${{ github.sha }}
-        docker push ${{ env.AZURE_CONTAINER_REGISTRY }}/decentralbet-backend:latest
+        mkdir -p ~/.ssh
+        echo "${{ secrets.VM_SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+        chmod 600 ~/.ssh/id_rsa
+        ssh-keyscan -H ${{ secrets.VM_IP }} >> ~/.ssh/known_hosts
 
-    - name: Build and push frontend image
+    - name: Deploy to VM
+      env:
+        VM_IP: ${{ secrets.VM_IP }}
+        VM_USER: ${{ secrets.VM_USER }}
       run: |
-        docker build -t ${{ env.AZURE_CONTAINER_REGISTRY }}/decentralbet-frontend:${{ github.sha }} \
-                     -t ${{ env.AZURE_CONTAINER_REGISTRY }}/decentralbet-frontend:latest \
-                     --target production \
-                     ./frontend
-        docker push ${{ env.AZURE_CONTAINER_REGISTRY }}/decentralbet-frontend:${{ github.sha }}
-        docker push ${{ env.AZURE_CONTAINER_REGISTRY }}/decentralbet-frontend:latest
-
-  deploy-to-aks:
-    runs-on: ubuntu-latest
-    name: Deploy to AKS
-    needs: build-and-push
-    if: github.ref == 'refs/heads/main'
-    environment: production
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
-    - name: Azure Login
-      uses: azure/login@v1
-      with:
-        creds: ${{ secrets.AZURE_CREDENTIALS }}
-
-    - name: Set up kubectl
-      uses: azure/setup-kubectl@v3
-      with:
-        version: 'v1.28.0'
-
-    - name: Get AKS credentials
-      run: |
-        az aks get-credentials --resource-group ${{ env.RESOURCE_GROUP }} --name ${{ env.CLUSTER_NAME }}
-
-    - name: Update image tags in manifests
-      run: |
-        sed -i 's|image: .*/decentralbet-backend:.*|image: ${{ env.AZURE_CONTAINER_REGISTRY }}/decentralbet-backend:${{ github.sha }}|g' k8s/backend.yaml
-        sed -i 's|image: .*/decentralbet-frontend:.*|image: ${{ env.AZURE_CONTAINER_REGISTRY }}/decentralbet-frontend:${{ github.sha }}|g' k8s/frontend.yaml
-
-    - name: Deploy to Kubernetes
-      run: |
-        kubectl apply -f k8s/namespace.yaml
-        kubectl apply -f k8s/backend.yaml
-        kubectl apply -f k8s/frontend.yaml
-        kubectl apply -f k8s/ingress.yaml
-
-    - name: Verify deployment
-      run: |
-        kubectl rollout status deployment/backend -n ${{ env.NAMESPACE }} --timeout=300s
-        kubectl rollout status deployment/frontend -n ${{ env.NAMESPACE }} --timeout=300s
-
-    - name: Run smoke tests
-      run: |
-        sleep 30
-        kubectl get ingress -n ${{ env.NAMESPACE }}
+        echo "🚀 Deploying to Azure VM: $VM_IP"
         
-        EXTERNAL_IP=$(kubectl get ingress decentralbet-ingress -n ${{ env.NAMESPACE }} -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
-        if [ ! -z "$EXTERNAL_IP" ]; then
-          curl -f http://$EXTERNAL_IP/api/v1/health || exit 1
-          echo "Backend health check passed"
-          
-          curl -f http://$EXTERNAL_IP/ || exit 1
-          echo "Frontend health check passed"
+        # Install dependencies if needed (first time setup)
+        ssh $VM_USER@$VM_IP "command -v git || (sudo apt update && sudo apt install -y git)"
+        ssh $VM_USER@$VM_IP "command -v node || (curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash - && sudo apt-get install -y nodejs)"
+        ssh $VM_USER@$VM_IP "command -v yarn || sudo npm install -g yarn"
+        ssh $VM_USER@$VM_IP "command -v pm2 || sudo npm install -g pm2"
+        
+        # Create app directory if it doesn't exist
+        ssh $VM_USER@$VM_IP "sudo mkdir -p /opt/decentralbet && sudo chown $VM_USER:$VM_USER /opt/decentralbet"
+        
+        # Clone or pull latest code
+        ssh $VM_USER@$VM_IP "if [ -d '/opt/decentralbet/.git' ]; then cd /opt/decentralbet && git pull origin main; else git clone https://github.com/Munasco/decentralbet-bcdv4034.git /opt/decentralbet; fi"
+        
+        # Build frontend
+        ssh $VM_USER@$VM_IP "cd /opt/decentralbet/frontend && yarn install --frozen-lockfile && yarn build"
+        
+        # Build backend  
+        ssh $VM_USER@$VM_IP "cd /opt/decentralbet/backend && npm ci"
+        
+        # Restart services with PM2
+        ssh $VM_USER@$VM_IP "cd /opt/decentralbet && pm2 restart ecosystem.config.js || pm2 start ecosystem.config.js"
+        
+        echo "✅ Deployment complete!"
+
+    - name: Health Check
+      env:
+        VM_IP: ${{ secrets.VM_IP }}
+      run: |
+        echo "🔍 Running health checks..."
+        sleep 30
+        
+        # Check frontend
+        if curl -f http://$VM_IP:3000 > /dev/null 2>&1; then
+          echo "✅ Frontend is healthy at http://$VM_IP:3000"
+        else
+          echo "❌ Frontend health check failed"
+          exit 1
         fi
+        
+        # Check backend
+        if curl -f http://$VM_IP:5000/health > /dev/null 2>&1; then
+          echo "✅ Backend is healthy at http://$VM_IP:5000"
+        else
+          echo "❌ Backend health check failed"  
+          exit 1
+        fi
+        
+        echo "🎉 All services are healthy!"
 
-  notify:
-    runs-on: ubuntu-latest
-    name: Notify Deployment Status
-    needs: deploy-to-aks
-    if: always()
-    
-    steps:
-    - name: Notify on success
-      if: needs.deploy-to-aks.result == 'success'
+    - name: Notify Success
+      if: success()
       run: |
-        echo "Deployment successful"
-        echo "Application URL: https://decentralbet.azurewebsites.net"
-        echo "API URL: https://api.decentralbet.azurewebsites.net"
-
-    - name: Notify on failure
-      if: needs.deploy-to-aks.result == 'failure'
-      run: |
-        echo "Deployment failed"
-        exit 1
+        echo "🎉 Deployment successful!"
+        echo "🌍 Frontend: http://${{ secrets.VM_IP }}:3000"
+        echo "🔧 Backend API: http://${{ secrets.VM_IP }}:5000"
