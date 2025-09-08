@@ -89,10 +89,19 @@ export default function Home() {
             for transparent, secure, and decentralized prediction markets.
           </p>
           {/* CI/CD Test Badge */}
-          <div className="mt-4">
-            <span className="inline-block bg-gradient-to-r from-green-500 to-blue-500 text-white px-4 py-2 rounded-full text-sm font-medium animate-pulse">
-              🚀 Live on Azure Kubernetes Service
-            </span>
+          <div className="mt-6">
+            <div className="inline-block bg-gradient-to-r from-green-400 via-blue-500 to-purple-600 p-1 rounded-2xl">
+              <div className="bg-gray-900 px-6 py-3 rounded-xl">
+                <span className="text-white font-bold text-lg animate-pulse">
+                  🚀 Live on Azure Kubernetes Service
+                </span>
+                <div className="text-center mt-1">
+                  <span className="text-xs text-green-400 font-mono">
+                    CI/CD Pipeline Active ✅
+                  </span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
