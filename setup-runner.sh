@@ -23,11 +23,17 @@ fi
 sudo -u runner bash << 'EOF'
 cd /home/runner
 
-# Download GitHub Actions Runner
-curl -o actions-runner-linux-x64-2.311.0.tar.gz -L https://github.com/actions/runner/releases/download/v2.311.0/actions-runner-linux-x64-2.311.0.tar.gz
+# Create a folder
+mkdir actions-runner && cd actions-runner
 
-# Extract it
-tar xzf ./actions-runner-linux-x64-2.311.0.tar.gz
+# Download the latest runner package
+curl -o actions-runner-linux-x64-2.328.0.tar.gz -L https://github.com/actions/runner/releases/download/v2.328.0/actions-runner-linux-x64-2.328.0.tar.gz
+
+# Optional: Validate the hash
+echo "01066fad3a2893e63e6ca880ae3a1fad5bf9329d60e77ee15f2b97c148c3cd4e  actions-runner-linux-x64-2.328.0.tar.gz" | shasum -a 256 -c
+
+# Extract the installer
+tar xzf ./actions-runner-linux-x64-2.328.0.tar.gz
 
 # Make runner executable
 chmod +x ./config.sh ./run.sh
@@ -48,5 +54,14 @@ echo "5. Install and start the runner service:"
 echo "   sudo ./svc.sh install"
 echo "   sudo ./svc.sh start"
 echo ""
-echo "Example config command (replace with your actual token):"
-echo "./config.sh --url https://github.com/Munasco/decentralbet-bcdv4034 --token YOUR_TOKEN_HERE"
+echo "🚀 Ready to configure! Run these commands as the runner user:"
+echo "sudo -u runner bash"
+echo "cd /home/runner/actions-runner"
+echo "./config.sh --url https://github.com/Munasco/decentralbet-bcdv4034 --token AJTNQL7BFVKQYLZDHNVRIKLIXZZN2"
+echo ""
+echo "Then start the runner:"
+echo "./run.sh"
+echo ""
+echo "Or install as service:"
+echo "sudo ./svc.sh install"
+echo "sudo ./svc.sh start"
