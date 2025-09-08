@@ -21,37 +21,28 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install tools
-        run: |
-          if ! command -v az &> /dev/null; then
-            curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
-          fi
-          if ! command -v terraform &> /dev/null; then
-            wget -O- https://apt.releases.hashicorp.com/gpg | sudo gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg
-            echo 'deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com jammy main' | sudo tee /etc/apt/sources.list.d/hashicorp.list
-            sudo apt update && sudo apt install terraform -y
-          fi
-          if ! command -v unzip &> /dev/null; then
-            sudo apt install unzip -y
-          fi
-          if ! command -v kubelogin &> /dev/null; then
-            curl -LO https://github.com/Azure/kubelogin/releases/download/v0.1.4/kubelogin-linux-amd64.zip
-            unzip kubelogin-linux-amd64.zip
-            sudo mv bin/linux_amd64/kubelogin /usr/local/bin/
-            rm -rf kubelogin-linux-amd64.zip bin/
-          fi
-
       - name: Azure login
         run: az login --identity
 
-      - name: Check existing AKS cluster
+      - name: Terraform init and import
         run: |
-          if az aks show --resource-group ${{ env.RESOURCE_GROUP }} --name ${{ env.CLUSTER_NAME }} --query name -o tsv 2>/dev/null; then
-            echo "AKS cluster exists, skipping terraform"
-          else
-            echo "AKS cluster not found, would need terraform"
-            exit 1
+          cd terraform
+          terraform init
+          
+          # Import existing resources if they exist
+          if az group show --name ${{ env.RESOURCE_GROUP }} >/dev/null 2>&1; then
+            terraform import azurerm_resource_group.main /subscriptions/$(az account show --query id -o tsv)/resourceGroups/${{ env.RESOURCE_GROUP }} || true
           fi
+          
+          if az aks show --resource-group ${{ env.RESOURCE_GROUP }} --name ${{ env.CLUSTER_NAME }} >/dev/null 2>&1; then
+            terraform import azurerm_kubernetes_cluster.main /subscriptions/$(az account show --query id -o tsv)/resourcegroups/${{ env.RESOURCE_GROUP }}/providers/Microsoft.ContainerService/managedClusters/${{ env.CLUSTER_NAME }} || true
+          fi
+
+      - name: Terraform apply
+        run: |
+          cd terraform
+          terraform plan -out=tfplan
+          terraform apply -auto-approve tfplan
 
       - name: Get AKS credentials
         run: |
