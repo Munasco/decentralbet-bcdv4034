@@ -56,7 +56,7 @@ const generateMockActivity = (): ActivityItem[] => {
                         Math.random() < 0.04 ? 'large_trade' : 'milestone';
 
     const baseActivity = {
-      id: `activity-${i}`,
+      id: `activity-${Date.now()}-${i}-${Math.random().toString(36).substr(2, 9)}`,
       type: activityType as ActivityItem['type'],
       timestamp,
       user: users[Math.floor(Math.random() * users.length)],
@@ -136,26 +136,9 @@ export default function ActivityFeed({ className = '', maxItems = 20 }: Activity
   const [isLive, setIsLive] = useState(true);
   
   useEffect(() => {
-    // Initial load
+    // Initial load only - no auto-updates
     setActivities(generateMockActivity());
-    
-    // Simulate real-time updates
-    const interval = setInterval(() => {
-      if (isLive) {
-        setActivities(prev => {
-          // Add a new random activity
-          const newActivity = generateMockActivity().slice(0, 1)[0];
-          if (newActivity) {
-            newActivity.timestamp = new Date(); // Make it current
-            return [newActivity, ...prev.slice(0, maxItems - 1)];
-          }
-          return prev;
-        });
-      }
-    }, 8000); // New activity every 8 seconds
-
-    return () => clearInterval(interval);
-  }, [isLive, maxItems]);
+  }, []);
 
   const formatTimeAgo = (timestamp: Date) => {
     const now = Date.now();

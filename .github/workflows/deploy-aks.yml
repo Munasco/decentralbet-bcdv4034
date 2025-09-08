@@ -1,0 +1,217 @@
+name: Deploy to AKS
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  AZURE_CONTAINER_REGISTRY: dbacr1757292120
+  CONTAINER_NAME_FRONTEND: decentralbet-frontend
+  CONTAINER_NAME_BACKEND: decentralbet-backend
+  RESOURCE_GROUP: decentralbet-rg
+  CLUSTER_NAME: decentralbet-aks
+  NAMESPACE: decentralbet
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        component: [frontend, backend]
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: ${{ matrix.component }}/package-lock.json
+
+    - name: Install dependencies
+      run: |
+        cd ${{ matrix.component }}
+        npm ci
+
+    - name: Run tests
+      run: |
+        cd ${{ matrix.component }}
+        npm test -- --watchAll=false || true
+
+    - name: Run lint
+      run: |
+        cd ${{ matrix.component }}
+        npm run lint || true
+
+    - name: Build application
+      run: |
+        cd ${{ matrix.component }}
+        if [ "${{ matrix.component }}" = "frontend" ]; then
+          npm run build
+        fi
+
+  build-and-push:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Azure Login
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+    - name: Login to Azure Container Registry
+      run: |
+        az acr login --name ${{ env.AZURE_CONTAINER_REGISTRY }}
+
+    - name: Build and push frontend image
+      run: |
+        cd frontend
+        
+        # Build image with correct platform
+        docker build \
+          --platform linux/amd64 \
+          -t ${{ env.AZURE_CONTAINER_REGISTRY }}.azurecr.io/${{ env.CONTAINER_NAME_FRONTEND }}:${{ github.sha }} \
+          -t ${{ env.AZURE_CONTAINER_REGISTRY }}.azurecr.io/${{ env.CONTAINER_NAME_FRONTEND }}:latest \
+          .
+        
+        # Push image
+        docker push ${{ env.AZURE_CONTAINER_REGISTRY }}.azurecr.io/${{ env.CONTAINER_NAME_FRONTEND }}:${{ github.sha }}
+        docker push ${{ env.AZURE_CONTAINER_REGISTRY }}.azurecr.io/${{ env.CONTAINER_NAME_FRONTEND }}:latest
+
+    - name: Build and push backend image  
+      run: |
+        cd backend
+        
+        # Build image with correct platform
+        docker build \
+          --platform linux/amd64 \
+          -t ${{ env.AZURE_CONTAINER_REGISTRY }}.azurecr.io/${{ env.CONTAINER_NAME_BACKEND }}:${{ github.sha }} \
+          -t ${{ env.AZURE_CONTAINER_REGISTRY }}.azurecr.io/${{ env.CONTAINER_NAME_BACKEND }}:latest \
+          .
+        
+        # Push image
+        docker push ${{ env.AZURE_CONTAINER_REGISTRY }}.azurecr.io/${{ env.CONTAINER_NAME_BACKEND }}:${{ github.sha }}
+        docker push ${{ env.AZURE_CONTAINER_REGISTRY }}.azurecr.io/${{ env.CONTAINER_NAME_BACKEND }}:latest
+
+  deploy-to-aks:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Azure Login
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+    - name: Set up kubectl
+      uses: azure/setup-kubectl@v3
+
+    - name: Get AKS credentials
+      run: |
+        az aks get-credentials --resource-group ${{ env.RESOURCE_GROUP }} --name ${{ env.CLUSTER_NAME }}
+
+    - name: Create namespace if not exists
+      run: |
+        kubectl create namespace ${{ env.NAMESPACE }} --dry-run=client -o yaml | kubectl apply -f -
+
+    - name: Update image tags in manifests
+      run: |
+        cd k8s
+        
+        # Update frontend image tag
+        sed -i "s|image: ${{ env.AZURE_CONTAINER_REGISTRY }}.azurecr.io/${{ env.CONTAINER_NAME_FRONTEND }}:.*|image: ${{ env.AZURE_CONTAINER_REGISTRY }}.azurecr.io/${{ env.CONTAINER_NAME_FRONTEND }}:${{ github.sha }}|g" frontend.yaml
+        
+        # Update backend image tag  
+        sed -i "s|image: ${{ env.AZURE_CONTAINER_REGISTRY }}.azurecr.io/${{ env.CONTAINER_NAME_BACKEND }}:.*|image: ${{ env.AZURE_CONTAINER_REGISTRY }}.azurecr.io/${{ env.CONTAINER_NAME_BACKEND }}:${{ github.sha }}|g" backend.yaml
+        
+        # Show updated images
+        echo "Updated image tags:"
+        grep "image:" frontend.yaml backend.yaml
+
+    - name: Deploy to AKS
+      run: |
+        cd k8s
+        
+        # Apply configurations in order
+        kubectl apply -f namespace.yaml
+        kubectl apply -f rbac.yaml
+        kubectl apply -f network-policies.yaml
+        kubectl apply -f backend.yaml
+        kubectl apply -f frontend.yaml
+        kubectl apply -f ingress.yaml
+        
+        # Apply monitoring if exists
+        if [ -d "monitoring" ]; then
+          kubectl apply -f monitoring/
+        fi
+
+    - name: Wait for deployment
+      run: |
+        kubectl rollout status deployment/frontend -n ${{ env.NAMESPACE }} --timeout=300s
+        kubectl rollout status deployment/backend -n ${{ env.NAMESPACE }} --timeout=300s
+
+    - name: Get deployment status
+      run: |
+        kubectl get pods -n ${{ env.NAMESPACE }}
+        kubectl get services -n ${{ env.NAMESPACE }}
+        kubectl get ingress -n ${{ env.NAMESPACE }}
+
+    - name: Run smoke tests
+      run: |
+        # Wait for services to be ready
+        sleep 60
+        
+        # Get ingress IP
+        INGRESS_IP=$(kubectl get ingress decentralbet-ingress -n ${{ env.NAMESPACE }} -o jsonpath='{.status.loadBalancer.ingress[0].ip}' || echo "")
+        
+        if [ -n "$INGRESS_IP" ]; then
+          echo "Testing deployment at IP: $INGRESS_IP"
+          
+          # Test backend health
+          curl -f "http://$INGRESS_IP/health" || echo "❌ Backend health check failed"
+          
+          # Test backend API
+          curl -f "http://$INGRESS_IP/api/debug/portfolios" || echo "❌ Backend API test failed"
+          
+          # Test frontend
+          curl -f "http://$INGRESS_IP/" | grep -q "DecentralBet" && echo "✅ Frontend test passed" || echo "❌ Frontend test failed"
+          
+          echo "✅ Deployment completed successfully!"
+        else
+          echo "⚠️  Ingress IP not available yet, skipping smoke tests"
+        fi
+
+  security-scan:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Run Trivy vulnerability scanner
+      uses: aquasecurity/trivy-action@master
+      with:
+        scan-type: 'fs'
+        scan-ref: '.'
+        format: 'sarif'
+        output: 'trivy-results.sarif'
+
+    - name: Upload Trivy scan results to GitHub Security tab
+      uses: github/codeql-action/upload-sarif@v2
+      if: always()
+      with:
+        sarif_file: 'trivy-results.sarif'

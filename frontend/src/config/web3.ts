@@ -1,18 +1,18 @@
 import { createConfig, http } from 'wagmi'
-import { hardhat } from 'wagmi/chains'
-import { injected } from 'wagmi/connectors'
+import { sepolia } from 'wagmi/chains'
+import { injected, metaMask, walletConnect } from 'wagmi/connectors'
 
-// Simple development-focused config
+// Production config for Sepolia testnet
 export const config = createConfig({
-  chains: [hardhat],
+  chains: [sepolia],
   connectors: [
     injected(), // MetaMask, etc.
+    metaMask(),
   ],
   transports: {
-    [hardhat.id]: http('http://localhost:8545'),
+    [sepolia.id]: http('https://eth-sepolia.g.alchemy.com/v2/M_mrbBEw-ctKxBuux_g0g'),
   },
 })
 
-
-// Default chain for development
-export const DEFAULT_CHAIN = hardhat
+// Default chain for testnet
+export const DEFAULT_CHAIN = sepolia

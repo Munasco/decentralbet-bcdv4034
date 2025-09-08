@@ -3,19 +3,18 @@
 import React, { ReactNode } from 'react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { WagmiProvider, createConfig, http } from 'wagmi'
-import { hardhat, sepolia } from 'wagmi/chains'
+import { sepolia } from 'wagmi/chains'
 import { injected } from 'wagmi/connectors'
 import { Toaster } from 'react-hot-toast'
 
-// Minimal config for local development - no external API calls
+// Production config for Sepolia testnet only
 const config = createConfig({
-  chains: [hardhat, sepolia],
+  chains: [sepolia],
   connectors: [
-    injected(), // Just MetaMask/browser wallets
+    injected(), // MetaMask/browser wallets
   ],
   transports: {
-    [hardhat.id]: http('http://localhost:8545'),
-    [sepolia.id]: http('https://sepolia.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161'),
+    [sepolia.id]: http('https://eth-sepolia.g.alchemy.com/v2/M_mrbBEw-ctKxBuux_g0g'),
   },
 })
 

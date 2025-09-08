@@ -5,15 +5,17 @@ import { useCombinedMarkets } from '../hooks/useBlockchainMarkets';
 import ActivityFeed from '../components/activity/ActivityFeed';
 import Navbar from '@/components/layout/Navbar';
 import { useTokenBalance } from '@/hooks/usePredictionMarket';
+import { usePortfolio } from '@/hooks/usePortfolio';
+import { slugify } from '@/lib/slug';
+
 export default function Home() {
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState<'volume' | 'trending' | 'ending_soon' | 'newest'>('trending');
   
-const { allMarkets, isLoading } = useCombinedMarkets();
-const { data: cashUSDC } = useTokenBalance();
-const portfolioUSDC = BigInt(0);
-  
+  const { allMarkets, isLoading } = useCombinedMarkets();
+  const { data: cashUSDC } = useTokenBalance();
+  const { portfolioValue } = usePortfolio(); // Get portfolio from backend!
 
   const filteredAndSortedMarkets = useMemo(() => {
     // Filter by category (only apply if not "All" and not sorting by trending/newest)
@@ -63,7 +65,6 @@ const portfolioUSDC = BigInt(0);
     return sorted;
   }, [allMarkets, selectedCategory, searchQuery, sortBy]);
 
-
   return (
     <div className="min-h-screen bg-gray-950 text-white">
       <Navbar
@@ -74,7 +75,7 @@ const portfolioUSDC = BigInt(0);
         onSelectSort={(s) => setSortBy(s)}
         sortBy={sortBy}
         cashUSDC={cashUSDC}
-        portfolioUSDC={portfolioUSDC}
+        portfolioUSDC={portfolioValue}
       />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -87,92 +88,96 @@ const portfolioUSDC = BigInt(0);
             Trade on the outcomes of real-world events. Powered by blockchain technology
             for transparent, secure, and decentralized prediction markets.
           </p>
+          {/* CI/CD Test Badge */}
+          <div className="mt-4">
+            <span className="inline-block bg-gradient-to-r from-green-500 to-blue-500 text-white px-4 py-2 rounded-full text-sm font-medium animate-pulse">
+              🚀 Live on Azure Kubernetes Service
+            </span>
+          </div>
         </div>
-        
-        {/* Removed Token Manager and stats to avoid redundancy with Navbar */}
 
         {/* Main Content Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           {/* Markets Column */}
           <div className="lg:col-span-3">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {isLoading ? (
-            <div className="col-span-2 text-center py-12">
-              <div className="text-gray-500">Loading markets from blockchain...</div>
-            </div>
-          ) : filteredAndSortedMarkets.length === 0 ? (
-            <div className="col-span-2 text-center py-12">
-              <div className="text-gray-500 space-y-2">
-                <p className="text-lg">No markets available yet!</p>
-                <p className="text-sm">Be the first to create a prediction market.</p>
-                <button 
-                  onClick={() => window.open('/create', '_self')}
-                  className="mt-4 bg-success hover:bg-success/90 text-white font-medium py-2 px-4 rounded-lg"
-                >
-                  🎯 Create First Market
-                </button>
-              </div>
-            </div>
-          ) : (
-            filteredAndSortedMarkets.map((market) => (
-            <div 
-              key={market.id} 
-              className="bg-gray-900 rounded-lg border border-gray-800 hover:border-gray-700 transition-all cursor-pointer"
-              onClick={() => window.location.href = `/events/${(market.question || '').toLowerCase().trim().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '')}`}
-            >
-              <div className="p-6">
-                <div className="flex items-start justify-between mb-4">
-                  <div className="flex items-center">
-                    <span className="text-2xl mr-3">{market.image}</span>
-                    <div>
-                      <span className="px-2 py-1 text-xs font-medium bg-info-muted/30 text-info rounded-full">
-                        {market.category} • LIVE
-                      </span>
-                    </div>
+              {isLoading ? (
+                <div className="col-span-2 text-center py-12">
+                  <div className="text-gray-500">Loading markets from blockchain...</div>
+                </div>
+              ) : filteredAndSortedMarkets.length === 0 ? (
+                <div className="col-span-2 text-center py-12">
+                  <div className="text-gray-500 space-y-2">
+                    <p className="text-lg">No markets available yet!</p>
+                    <p className="text-sm">Be the first to create a prediction market.</p>
+                    <button 
+                      onClick={() => window.open('/create', '_self')}
+                      className="mt-4 bg-success hover:bg-success/90 text-white font-medium py-2 px-4 rounded-lg"
+                    >
+                      🎯 Create First Market
+                    </button>
                   </div>
-                  <div className="flex items-center gap-4">
-                    <div className="text-right">
-                      <div className="text-sm text-gray-400">{market.volume}</div>
-                      <div className="text-xs text-gray-500">Volume</div>
-                    </div>
-                    {/* Gauge ring showing Yes chance */}
-                    <div className="relative w-12 h-12" aria-label="chance gauge">
-                      <div
-                        className="absolute inset-0 rounded-full"
-                        style={{
-                          background: `conic-gradient(var(--success) ${(market.yesPrice * 100).toFixed(0)}%, #374151 0)`
-                        }}
-                      />
-                      <div className="absolute inset-1 bg-gray-900 rounded-full flex items-center justify-center text-xs text-gray-100 font-medium">
-                        {(market.yesPrice * 100).toFixed(0)}%
+                </div>
+              ) : (
+                filteredAndSortedMarkets.map((market) => (
+                  <div 
+                    key={market.id} 
+                    className="bg-gray-900 rounded-lg border border-gray-800 hover:border-gray-700 transition-all cursor-pointer"
+                    onClick={() => window.location.href = `/events/${slugify(market.question)}`}
+                  >
+                    <div className="p-6">
+                      <div className="flex items-start justify-between mb-4">
+                        <div className="flex items-center">
+                          <span className="text-2xl mr-3">{market.image}</span>
+                          <div>
+                            <span className="px-2 py-1 text-xs font-medium bg-info-muted/30 text-info rounded-full">
+                              {market.category} • LIVE
+                            </span>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-4">
+                          <div className="text-right">
+                            <div className="text-sm text-gray-400">{market.volume}</div>
+                            <div className="text-xs text-gray-500">Volume</div>
+                          </div>
+                          {/* Gauge ring showing Yes chance */}
+                          <div className="relative w-12 h-12" aria-label="chance gauge">
+                            <div
+                              className="absolute inset-0 rounded-full"
+                              style={{
+                                background: `conic-gradient(var(--success) ${(market.yesPrice * 100).toFixed(0)}%, #374151 0)`
+                              }}
+                            />
+                            <div className="absolute inset-1 bg-gray-900 rounded-full flex items-center justify-center text-xs text-gray-100 font-medium">
+                              {(market.yesPrice * 100).toFixed(0)}%
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <h3 className="text-lg font-semibold text-white mb-4 line-clamp-2">
+                        {market.question}
+                      </h3>
+
+                      <div className="grid grid-cols-2 gap-3 mb-4">
+                        <div className="bg-gray-800 border border-gray-700 text-gray-200 font-medium py-3 px-4 rounded-lg">
+                          <div className="text-xs opacity-75">YES</div>
+                          <div className="text-lg font-bold text-success">{(market.yesPrice * 100).toFixed(0)}¢</div>
+                        </div>
+                        <div className="bg-gray-800 border border-gray-700 text-gray-200 font-medium py-3 px-4 rounded-lg">
+                          <div className="text-xs opacity-75">NO</div>
+                          <div className="text-lg font-bold text-error">{(market.noPrice * 100).toFixed(0)}¢</div>
+                        </div>
+                      </div>
+
+                      <div className="flex justify-between text-sm text-gray-300">
+                        <span>Ends {market.ends}</span>
+                        <span>🔥 Trending</span>
                       </div>
                     </div>
                   </div>
-                </div>
-
-                <h3 className="text-lg font-semibold text-white mb-4 line-clamp-2">
-                  {market.question}
-                </h3>
-
-                <div className="grid grid-cols-2 gap-3 mb-4">
-                  <div className="bg-gray-800 border border-gray-700 text-gray-200 font-medium py-3 px-4 rounded-lg">
-                    <div className="text-xs opacity-75">YES</div>
-                    <div className="text-lg font-bold text-success">{(market.yesPrice * 100).toFixed(0)}¢</div>
-                  </div>
-                  <div className="bg-gray-800 border border-gray-700 text-gray-200 font-medium py-3 px-4 rounded-lg">
-                    <div className="text-xs opacity-75">NO</div>
-                    <div className="text-lg font-bold text-error">{(market.noPrice * 100).toFixed(0)}¢</div>
-                  </div>
-                </div>
-
-                <div className="flex justify-between text-sm text-gray-300">
-                  <span>Ends {market.ends}</span>
-                  <span>🔥 Trending</span>
-                </div>
-              </div>
-            </div>
-            ))
-            )}
+                ))
+              )}
             </div>
           </div>
           
@@ -194,15 +199,14 @@ const portfolioUSDC = BigInt(0);
       </main>
 
       {/* Footer */}
-<footer className="bg-gray-900 border-t border-gray-800 mt-16">
+      <footer className="bg-gray-900 border-t border-gray-800 mt-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-<div className="text-center text-gray-400">
+          <div className="text-center text-gray-400">
             <p>&copy; 2025 DecentralBet. Powered by Ethereum blockchain technology.</p>
-<p className="mt-2 text-sm text-gray-500">Trade responsibly. Past performance does not guarantee future results.</p>
+            <p className="mt-2 text-sm text-gray-500">Trade responsibly. Past performance does not guarantee future results.</p>
           </div>
         </div>
       </footer>
-      
     </div>
   );
 }

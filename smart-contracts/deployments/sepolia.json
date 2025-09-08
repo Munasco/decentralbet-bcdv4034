@@ -1,0 +1,13 @@
+{
+  "network": "Ethereum Sepolia Testnet",
+  "chainId": 11155111,
+  "deployedAt": "2025-09-07T19:49:24.754Z",
+  "deployer": "0xEde8e1d2015Dd5Fbdac363f6e2Be5E10cf41C119",
+  "contracts": {
+    "MockUSDC": "0xC8bAD4974f4A6Cf62B39141d79De5c875a66ee3d",
+    "PredictionMarketFactory": "0x70ff7fedDb900f9e254aEfA8b9b8f81f5d770460",
+    "PredictionMarket": "0x0825840aA80d49100218E8B655F126D26bD24e1D"
+  },
+  "rpcUrl": "https://eth-sepolia.g.alchemy.com/v2/M_mrbBEw-ctKxBuux_g0g",
+  "blockExplorer": "https://sepolia.etherscan.io"
+}

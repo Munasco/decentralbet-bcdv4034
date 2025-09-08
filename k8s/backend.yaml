@@ -24,9 +24,9 @@ spec:
       serviceAccountName: decentralbet-sa
       containers:
       - name: backend
-        image: decentralbetacr.azurecr.io/decentralbet-backend:latest
+        image: dbacr1757292120.azurecr.io/decentralbet-backend:latest
         ports:
-        - containerPort: 5000
+        - containerPort: 3001
         envFrom:
         - configMapRef:
             name: decentralbet-config
@@ -34,7 +34,7 @@ spec:
             name: decentralbet-secrets
         env:
         - name: PORT
-          value: "5000"
+          value: "3001"
         resources:
           requests:
             cpu: 200m
@@ -45,7 +45,7 @@ spec:
         livenessProbe:
           httpGet:
             path: /health
-            port: 5000
+            port: 3001
           initialDelaySeconds: 30
           periodSeconds: 10
           timeoutSeconds: 5
@@ -53,7 +53,7 @@ spec:
         readinessProbe:
           httpGet:
             path: /health
-            port: 5000
+            port: 3001
           initialDelaySeconds: 5
           periodSeconds: 5
           timeoutSeconds: 3
@@ -83,8 +83,8 @@ spec:
     app: backend
   ports:
   - name: http
-    port: 5000
-    targetPort: 5000
+    port: 3001
+    targetPort: 3001
     protocol: TCP
   - name: metrics
     port: 9090

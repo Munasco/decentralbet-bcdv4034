@@ -1,4 +1,5 @@
 import { ethers } from "hardhat";
+import hre from "hardhat";
 import fs from 'fs';
 import path from 'path';
 
@@ -70,7 +71,7 @@ async function main() {
   // Deploy PredictionMarketFactory  
   console.log("\n📦 Step 2: Deploying PredictionMarketFactory...");
   const PredictionMarketFactory = await ethers.getContractFactory("PredictionMarketFactory");
-  const factory = await PredictionMarketFactory.deploy();
+  const factory = await PredictionMarketFactory.deploy(mockUSDCAddress); // Pass MockUSDC as default betting token
   await factory.waitForDeployment();
   const factoryAddress = await factory.getAddress();
   console.log("✅ PredictionMarketFactory deployed to:", factoryAddress);
@@ -78,11 +79,8 @@ async function main() {
   // Deploy main PredictionMarket
   console.log("\n📦 Step 3: Deploying PredictionMarket...");
   const PredictionMarket = await ethers.getContractFactory("PredictionMarket");
-  const resolutionTime = network === 'localhost' ? 300 : 3600; // 5 min local, 1 hour testnet
   const predictionMarket = await PredictionMarket.deploy(
-    mockUSDCAddress,
-    deployer.address, // Oracle address
-    resolutionTime
+    mockUSDCAddress // Only betting token required
   );
   await predictionMarket.waitForDeployment();
   const predictionMarketAddress = await predictionMarket.getAddress();

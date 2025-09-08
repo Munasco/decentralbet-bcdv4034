@@ -135,8 +135,7 @@ export function useRealTimePricing(marketId: number | string, baseYesPrice: numb
   return useQuery({
     queryKey: ['realtime-pricing', marketId, Math.round(baseYesPrice * 100)],
     queryFn: async () => {
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 100));
+      // Generate immediate pricing data
       
       // Generate small price variations (±2%) around base price
       const seed = typeof marketId === 'string' ? 

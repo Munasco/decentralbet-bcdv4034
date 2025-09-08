@@ -19,7 +19,7 @@ spec:
     spec:
       containers:
       - name: frontend
-        image: decentralbetacr.azurecr.io/decentralbet-frontend:latest
+        image: dbacr1757292120.azurecr.io/decentralbet-frontend:latest
         ports:
         - containerPort: 3000
         envFrom:

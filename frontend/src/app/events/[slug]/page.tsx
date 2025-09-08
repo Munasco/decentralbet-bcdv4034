@@ -99,31 +99,27 @@ export default function EventPage({ params }: EventsPageProps) {
   const { approveTokens, isLoading: isApproving } = useTokenApproval(() => {
     // After approval succeeds, automatically place the pending bet
     if (pendingBet) {
-      // Approval successful, placing pending bet
-      setTimeout(() => {
-        const { outcome, amount } = pendingBet
-        const outcomeId = outcome === 'yes' ? 1 : 2 // Use 1-based indexing
-        // About to place pending bet
-        placeBet(marketId, outcomeId, amount)
-        setPendingBet(null)
-      },500) // Longer delay to let approval settle
+      // Approval successful, placing pending bet immediately
+      const { outcome, amount } = pendingBet
+      const outcomeId = outcome === 'yes' ? 1 : 2 // Use 1-based indexing
+      // Place pending bet immediately after approval
+      placeBet(marketId, outcomeId, amount)
+      setPendingBet(null)
     }
   })
   
   // Betting hook with callback to finish the flow and refresh data
-  const { placeBet, isLoading: isBetting } = usePlaceBet(() => {
+  const { placeBet, isLoading: isBetting } = usePlaceBet(async () => {
     setIsProcessingBet(false)
     setPendingBet(null)
     
     // Refetch the actual blockchain data after successful bet
-    setTimeout(async () => {
-      await refetchMarketData() // Refresh market data from contract
-      await refetchBalance()    // Refresh token balance
-      
-      // Also invalidate TanStack Query cache to update mock data
-      await queryClient.invalidateQueries({ queryKey: ['market-metrics', Number(marketId), marketData?.[9]?.toString()] })
-      await queryClient.refetchQueries({ queryKey: ['market-metrics', Number(marketId), marketData?.[9]?.toString()] })
-    }, 500) // Give blockchain time to update
+    await refetchMarketData() // Refresh market data from contract
+    await refetchBalance()    // Refresh token balance
+    
+    // Also invalidate TanStack Query cache to update mock data
+    await queryClient.invalidateQueries({ queryKey: ['market-metrics', Number(marketId), marketData?.[9]?.toString()] })
+    await queryClient.refetchQueries({ queryKey: ['market-metrics', Number(marketId), marketData?.[9]?.toString()] })
   })
   
   const handlePlaceBet = async (outcome: 'yes' | 'no', amount: string) => {

@@ -13,7 +13,7 @@ export function USDCManager() {
 
   const { getTokens, isLoading } = useTokenFaucet(() => {
     // Success callback - refetch balance after tokens are received
-    setTimeout(() => refetch(), 2000)
+    refetch()
     setAmount('1000') // Reset form
   })
 

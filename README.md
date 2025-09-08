@@ -1,158 +1,151 @@
-# DecentralBet - Enterprise Blockchain Prediction Market
+# 🎲 DecentralBet - Decentralized Prediction Markets
 
-## BCDV 4034 Final Project - George Brown College
-**Student**: Munachiso Ernest-Eze | **Professor**: Pradeep Prakasam
+A full-stack decentralized prediction market platform built with Next.js, Node.js, and Ethereum smart contracts. Users can create markets, place bets, and resolve outcomes in a trustless environment.
 
-[![Deploy Status](https://img.shields.io/badge/deployment-ready-green)](https://github.com/Munasco/decentralbet-bcdv4034)
+[![Deploy Status](https://img.shields.io/badge/deployment-ready-green)](https://github.com/your-username/fullstack-blockchain-integration)
 [![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
+[![Azure](https://img.shields.io/badge/Azure-AKS%20Ready-blue)](https://azure.microsoft.com/)
+[![Ethereum](https://img.shields.io/badge/Ethereum-Sepolia-purple)](https://sepolia.etherscan.io/)
 
 ---
 
-## 🎯 **Project Overview**
+## 🌟 Features
 
-**DecentralBet** is a production-ready, enterprise-grade blockchain prediction market platform. Users can create and participate in prediction markets, place bets using cryptocurrency, and earn rewards for correct predictions.
+### 🎯 Core Functionality
+- **Create Prediction Markets**: Deploy custom prediction markets with multiple outcomes
+- **Place Bets**: Use Mock USDC to bet on market outcomes
+- **Resolve Markets**: Decentralized resolution mechanism for market outcomes
+- **Real-time Updates**: Live market data and WebSocket integration
+- **Wallet Integration**: MetaMask and WalletConnect support
 
-### **🚀 Live Demo**
-- **Local**: http://localhost:3000
-- **Blockchain**: Ethereum Sepolia via Alchemy
-- **Repository**: https://github.com/Munasco/decentralbet-bcdv4034
+### 🔧 Technical Features
+- **Smart Contracts**: Deployed on Ethereum Sepolia testnet
+- **Factory Pattern**: Efficient market creation and management
+- **ERC-20 Integration**: Mock USDC token for testing
+- **Real-time Data**: Live blockchain data synchronization
+- **Responsive Design**: Mobile-first design with Tailwind CSS
+- **Enterprise Ready**: Complete CI/CD, monitoring, and deployment automation
 
----
-
-## 🏗️ **Clean Architecture**
-
-```mermaid
-graph TB
-    subgraph "User Layer"
-        U1[MetaMask Wallet]
-        U2[Web Browser]
-    end
-    
-    subgraph "Application Layer"
-        F[Frontend - Next.js]
-        B[Backend - Node.js]
-    end
-    
-    subgraph "Blockchain Layer"
-        BC[Ethereum Sepolia]
-        SC[Smart Contracts]
-        A[Alchemy RPC]
-    end
-    
-    subgraph "Infrastructure Layer"
-        DB[(MongoDB)]
-        R[(Redis)]
-        AKS[Azure Kubernetes]
-        TF[Terraform]
-    end
-    
-    U1 --> F
-    U2 --> F
-    F --> B
-    B --> DB
-    B --> R
-    F --> A
-    A --> BC
-    SC --> BC
-    AKS --> F
-    AKS --> B
-    TF --> AKS
-```
-
----
-
-## 🛠️ **Technology Stack**
-
-| Layer | Technology | Purpose |
-|-------|------------|---------|
-| **Frontend** | Next.js 14 + TypeScript | React app with SSR |
-| **Backend** | Node.js + Express | REST API server |
-| **Blockchain** | Ethereum Sepolia + Alchemy | Decentralized backend |
-| **Database** | MongoDB + Redis | Data persistence |
-| **Infrastructure** | Azure AKS + Terraform | Cloud deployment |
-| **DevOps** | GitHub Actions + Ansible | CI/CD pipeline |
-
----
-
-## ⚡ **Quick Start**
-
-### **Prerequisites**
-```bash
-# Required
-- Node.js 18+
-- Docker & Docker Compose
-- MetaMask browser extension
-
-# Optional (for deployment)
-- Azure CLI
-- Terraform
-- kubectl
-```
-
-### **1. Setup & Installation**
-```bash
-# Clone repository
-git clone https://github.com/Munasco/decentralbet-bcdv4034.git
-cd decentralbet-bcdv4034
-
-# Install dependencies
-cd backend && npm install
-cd ../frontend && npm install
-cd ../smart-contracts && npm install
-```
-
-### **2. Start Local Environment**
-```bash
-# Start databases
-docker-compose up -d
-
-# Deploy smart contracts
-cd smart-contracts
-npm run deploy:local
-
-# Start backend (new terminal)
-cd backend
-npm start
-
-# Start frontend (new terminal)
-cd frontend  
-npm run dev
-```
-
-### **3. Access Application**
+### **🚀 Live Demo & Resources**
 - **Frontend**: http://localhost:3000
 - **Backend API**: http://localhost:5000/api/v1
-- **Blockchain**: http://localhost:8545
+- **Blockchain**: Ethereum Sepolia testnet
+- **Smart Contracts**: [View on Etherscan](https://sepolia.etherscan.io/address/0x70ff7fedDb900f9e254aEfA8b9b8f81f5d770460)
+- **Documentation**: [AKS Deployment Guide](./docs/AKS-DEPLOYMENT.md)
 
 ---
 
-## 🔗 **Production Deployment**
+## 🏗️ Architecture
 
-### **Ethereum Sepolia Testnet**
-```bash
-# Configure environment
-cp .env.example .env
-# Add your Ethereum private key to .env
-
-# Deploy to Sepolia
-cd smart-contracts
-npm run deploy:sepolia
-
-# Contracts deployed to:
-# - Chain ID: 11155111
-# - RPC: https://eth-sepolia.g.alchemy.com/v2/M_mrbBEw-ctKxBuux_g0g
+```
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│     Frontend    │    │     Backend     │    │   Blockchain    │
+│                 │    │                 │    │                 │
+│  • Next.js 14   │◄──►│  • Node.js      │◄──►│  • Ethereum     │
+│  • React 18     │    │  • Express      │    │  • Sepolia      │
+│  • Tailwind     │    │  • Socket.io    │    │  • Smart        │
+│  • Wagmi/Viem   │    │  • MongoDB      │    │    Contracts    │
+│  • Jotai        │    │  • Redis        │    │  • Factory      │
+└─────────────────┘    └─────────────────┘    └─────────────────┘
 ```
 
-### **Azure Kubernetes Service**
-```bash
-# Deploy infrastructure
-cd infrastructure
-terraform init
-terraform apply
+---
 
-# Deploy applications
+## 🔧 Smart Contracts
+
+### Contract Addresses (Sepolia)
+
+| Contract | Address | Description |
+|----------|---------|-------------|
+| **Factory Contract** | `0x70ff7fedDb900f9e254aEfA8b9b8f81f5d770460` | Creates prediction markets |
+| **Prediction Market** | `0x0825840aA80d49100218E8B655F126D26bD24e1D` | Market logic implementation |
+| **Mock USDC** | `0xC8bAD4974f4A6Cf62B39141d79De5c875a66ee3d` | Test ERC-20 token |
+
+### Key Features
+
+- **Factory Pattern**: Efficient market deployment
+- **Outcome Management**: Support for multiple outcomes per market
+- **Betting Logic**: Secure bet placement and payout calculation  
+- **Resolution Mechanism**: Admin-controlled market resolution
+- **ERC-20 Integration**: Token-based betting system
+
+---
+
+## 🚀 Quick Start
+
+### Prerequisites
+
+- Node.js 18+
+- Docker & Docker Compose
+- MetaMask wallet
+- Git
+
+### 1. Clone the Repository
+
+```bash
+git clone https://github.com/your-username/fullstack-blockchain-integration.git
+cd fullstack-blockchain-integration
+```
+
+### 2. Environment Setup
+
+Copy environment files and update configuration:
+
+```bash
+# Frontend environment
+cp frontend/.env.example frontend/.env.local
+
+# Backend environment
+cp backend/.env.example backend/.env
+```
+
+### 3. Start Development Environment
+
+```bash
+# Start the full stack with Docker Compose
+docker-compose up -d
+
+# Or start services individually
+cd frontend && yarn dev
+cd backend && yarn dev
+```
+
+### 4. Configure MetaMask
+
+1. Add Sepolia testnet to MetaMask
+2. Get test ETH from [Sepolia faucet](https://sepoliafaucet.com/)
+3. Import Mock USDC token: `0xC8bAD4974f4A6Cf62B39141d79De5c875a66ee3d`
+
+## ☘️ Kubernetes Deployment
+
+### Prerequisites
+
+- Azure CLI
+- kubectl
+- Docker
+- Terraform (optional)
+
+### Quick Deploy to AKS
+
+```bash
+# Run the automated deployment script
+./scripts/deploy-aks.sh
+```
+
+### Manual Deployment
+
+```bash
+# Create AKS cluster
+az aks create --resource-group myResourceGroup --name myAKSCluster
+
+# Get credentials
+az aks get-credentials --resource-group myResourceGroup --name myAKSCluster
+
+# Deploy application
 kubectl apply -f k8s/
 ```
+
+For detailed deployment instructions, see [AKS Deployment Guide](./docs/AKS-DEPLOYMENT.md).
 
 ---
 
@@ -205,37 +198,46 @@ curl http://localhost:5000/api/v1/markets
 
 ---
 
-## 📁 **Clean Project Structure**
+## 📋 Project Structure
 
 ```
-decentralbet-bcdv4034/
-├── README.md                    # This file
-├── docker-compose.yml           # Local development
-├── .env.example                 # Environment template
-│
-├── frontend/                    # Next.js application
-│   ├── src/app/                # App router pages
-│   ├── src/components/         # Reusable components
-│   └── src/lib/                # Utilities
-│
-├── backend/                     # Node.js API
-│   ├── src/server.js           # Main server
-│   ├── src/controllers/        # Route handlers
-│   ├── src/models/             # Database models
-│   └── src/services/           # Business logic
-│
-├── smart-contracts/             # Blockchain layer
-│   ├── contracts/              # Solidity contracts
-│   ├── scripts/deploy.js       # Single deployment script
-│   └── test/                   # Contract tests
-│
-├── infrastructure/              # Infrastructure as Code
-│   ├── terraform/              # Azure resources
-│   ├── k8s/                    # Kubernetes manifests
-│   └── ansible/                # Configuration management
-│
-└── load-testing/                # Performance testing
-    └── locustfile.py           # Load test scenarios
+fullstack-blockchain-integration/
+├── frontend/                 # Next.js React application
+│   ├── src/
+│   │   ├── components/      # Reusable UI components
+│   │   ├── hooks/          # Custom React hooks
+│   │   ├── lib/            # Utilities and configurations
+│   │   ├── pages/          # Next.js pages
+│   │   └── atoms/          # Jotai state management
+│   ├── public/             # Static assets
+│   └── Dockerfile          # Frontend container
+├── backend/                 # Node.js Express API
+│   ├── src/
+│   │   ├── controllers/    # API controllers
+│   │   ├── models/         # Database models
+│   │   ├── routes/         # Express routes
+│   │   ├── middleware/     # Custom middleware
+│   │   └── services/       # Business logic
+│   └── Dockerfile          # Backend container
+├── contracts/              # Smart contracts (Hardhat)
+│   ├── contracts/          # Solidity contracts
+│   ├── scripts/           # Deployment scripts
+│   └── test/              # Contract tests
+├── k8s/                    # Kubernetes manifests
+│   ├── frontend.yaml       # Frontend deployment
+│   ├── backend.yaml        # Backend deployment
+│   ├── ingress.yaml        # Load balancer
+│   └── monitoring/         # Observability stack
+├── terraform/              # Infrastructure as Code
+│   ├── main.tf            # Azure AKS infrastructure
+│   ├── variables.tf       # Configuration variables
+│   └── outputs.tf         # Resource outputs
+├── scripts/               # Automation scripts
+│   ├── deploy-aks.sh      # AKS deployment script
+│   └── setup-dev.sh       # Development setup
+├── docs/                  # Documentation
+│   └── AKS-DEPLOYMENT.md  # Deployment guide
+└── docker-compose.yml     # Local development stack
 ```
 
 ---
