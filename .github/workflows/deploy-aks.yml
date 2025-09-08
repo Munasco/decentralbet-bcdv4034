@@ -61,19 +61,19 @@ jobs:
           ACR_ID=$(az acr show --name ${{ env.ACR_NAME }} --resource-group ${{ env.RESOURCE_GROUP }} --query id -o tsv)
           az role assignment create --assignee "$KUBELET_OID" --role AcrPull --scope "$ACR_ID" || true
 
-      - name: ACR login
+      - name: Build and push images with ACR Tasks (no Docker on runner)
         run: |
-          az acr login --name ${{ env.ACR_NAME }}
+          az acr build \
+            --registry ${{ env.ACR_NAME }} \
+            -t decentralbet-frontend:${{ github.sha }} \
+            -t decentralbet-frontend:latest \
+            ./frontend
 
-      - name: Build and push images
-        run: |
-          docker build -t ${{ env.ACR_LOGIN_SERVER }}/decentralbet-frontend:${{ github.sha }} -t ${{ env.ACR_LOGIN_SERVER }}/decentralbet-frontend:latest ./frontend
-          docker push ${{ env.ACR_LOGIN_SERVER }}/decentralbet-frontend:${{ github.sha }}
-          docker push ${{ env.ACR_LOGIN_SERVER }}/decentralbet-frontend:latest
-
-          docker build -t ${{ env.ACR_LOGIN_SERVER }}/decentralbet-backend:${{ github.sha }} -t ${{ env.ACR_LOGIN_SERVER }}/decentralbet-backend:latest ./backend
-          docker push ${{ env.ACR_LOGIN_SERVER }}/decentralbet-backend:${{ github.sha }}
-          docker push ${{ env.ACR_LOGIN_SERVER }}/decentralbet-backend:latest
+          az acr build \
+            --registry ${{ env.ACR_NAME }} \
+            -t decentralbet-backend:${{ github.sha }} \
+            -t decentralbet-backend:latest \
+            ./backend
 
       - name: Get AKS credentials
         run: |
