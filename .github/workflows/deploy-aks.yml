@@ -1,13 +1,12 @@
-name: Deploy to AKS with Managed Identity
+name: Deploy to AKS
 
 on:
-  # Manual trigger for AKS deployment or infrastructure changes
   push:
     branches: [ develop ]
     paths: 
       - 'k8s/**'
       - 'terraform/**'
-  workflow_dispatch: # Allow manual triggering
+  workflow_dispatch:
 
 env:
   RESOURCE_GROUP: decentralbet-rg
@@ -20,8 +19,7 @@ jobs:
     environment: production
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - name: Install Azure CLI
         run: |
@@ -29,11 +27,10 @@ jobs:
             curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
           fi
 
-      - name: Azure CLI Login with Managed Identity
-        run: |
-          az login --identity
+      - name: Azure login
+        run: az login --identity
 
-      - name: Create AKS Cluster
+      - name: Create AKS cluster
         run: |
           if ! az aks show --resource-group ${{ env.RESOURCE_GROUP }} --name ${{ env.CLUSTER_NAME }} --query name -o tsv 2>/dev/null; then
             az aks create \
@@ -46,29 +43,27 @@ jobs:
               --yes
           fi
 
-      - name: Get AKS Credentials
+      - name: Get AKS credentials
         run: |
           az aks get-credentials \
             --resource-group ${{ env.RESOURCE_GROUP }} \
             --name ${{ env.CLUSTER_NAME }} \
             --overwrite-existing
 
-      - name: Deploy to AKS
+      - name: Deploy
         run: |
           kubectl create namespace blockchain-app --dry-run=client -o yaml | kubectl apply -f -
           kubectl apply -f k8s/ -n blockchain-app
           sleep 30
           kubectl get all -n blockchain-app
-
           if kubectl get deployment frontend-deployment -n blockchain-app 2>/dev/null; then
             kubectl wait --for=condition=available --timeout=300s deployment/frontend-deployment -n blockchain-app
           fi
-
           if kubectl get deployment backend-deployment -n blockchain-app 2>/dev/null; then
             kubectl wait --for=condition=available --timeout=300s deployment/backend-deployment -n blockchain-app
           fi
 
-      - name: Get Service Status
+      - name: Status
         run: |
           kubectl get all -n blockchain-app
           kubectl get services -n blockchain-app
