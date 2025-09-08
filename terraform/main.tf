@@ -26,24 +26,16 @@ resource "random_id" "main" {
   byte_length = 8
 }
 
-# Resource Group
-resource "azurerm_resource_group" "main" {
-  name     = var.resource_group_name
-  location = var.location
-
-  tags = {
-    Environment = var.environment
-    Project     = "DecentralBet"
-    ManagedBy   = "Terraform"
-    Component   = "Infrastructure"
-  }
+# Data source for existing resource group
+data "azurerm_resource_group" "main" {
+  name = var.resource_group_name
 }
 
 # Azure Container Registry
 resource "azurerm_container_registry" "main" {
   name                = var.acr_name
-  resource_group_name = azurerm_resource_group.main.name
-  location           = azurerm_resource_group.main.location
+  resource_group_name = data.azurerm_resource_group.main.name
+  location           = data.azurerm_resource_group.main.location
   sku                = "Standard"
   admin_enabled      = true
 
@@ -58,8 +50,8 @@ resource "azurerm_container_registry" "main" {
 # Virtual Network
 resource "azurerm_virtual_network" "main" {
   name                = "${var.prefix}-vnet"
-  location           = azurerm_resource_group.main.location
-  resource_group_name = azurerm_resource_group.main.name
+  location           = data.azurerm_resource_group.main.location
+  resource_group_name = data.azurerm_resource_group.main.name
   address_space       = ["10.1.0.0/16"]
 
   tags = {
@@ -72,7 +64,7 @@ resource "azurerm_virtual_network" "main" {
 # AKS Subnet
 resource "azurerm_subnet" "aks" {
   name                 = "${var.prefix}-aks-subnet"
-  resource_group_name  = azurerm_resource_group.main.name
+  resource_group_name  = data.azurerm_resource_group.main.name
   virtual_network_name = azurerm_virtual_network.main.name
   address_prefixes     = ["10.1.1.0/24"]
 }
@@ -80,8 +72,8 @@ resource "azurerm_subnet" "aks" {
 # Log Analytics Workspace for AKS monitoring
 resource "azurerm_log_analytics_workspace" "main" {
   name                = "${var.prefix}-logs"
-  location           = azurerm_resource_group.main.location
-  resource_group_name = azurerm_resource_group.main.name
+  location           = data.azurerm_resource_group.main.location
+  resource_group_name = data.azurerm_resource_group.main.name
   sku                = "PerGB2018"
   retention_in_days   = 30
 
@@ -95,8 +87,8 @@ resource "azurerm_log_analytics_workspace" "main" {
 # AKS Cluster
 resource "azurerm_kubernetes_cluster" "main" {
   name                = var.cluster_name
-  location           = azurerm_resource_group.main.location
-  resource_group_name = azurerm_resource_group.main.name
+  location           = data.azurerm_resource_group.main.location
+  resource_group_name = data.azurerm_resource_group.main.name
   dns_prefix         = "${var.prefix}-aks"
   kubernetes_version = var.kubernetes_version
 
@@ -158,8 +150,8 @@ resource "azurerm_role_assignment" "aks_acr" {
 # Application Gateway (for ingress)
 resource "azurerm_public_ip" "gateway" {
   name                = "${var.prefix}-gateway-ip"
-  resource_group_name = azurerm_resource_group.main.name
-  location           = azurerm_resource_group.main.location
+  resource_group_name = data.azurerm_resource_group.main.name
+  location           = data.azurerm_resource_group.main.location
   allocation_method   = "Static"
   sku                = "Standard"
 
@@ -173,7 +165,7 @@ resource "azurerm_public_ip" "gateway" {
 # Application Gateway Subnet
 resource "azurerm_subnet" "gateway" {
   name                 = "${var.prefix}-gateway-subnet"
-  resource_group_name  = azurerm_resource_group.main.name
+  resource_group_name  = data.azurerm_resource_group.main.name
   virtual_network_name = azurerm_virtual_network.main.name
   address_prefixes     = ["10.1.2.0/24"]
 }
@@ -181,8 +173,8 @@ resource "azurerm_subnet" "gateway" {
 # Application Gateway
 resource "azurerm_application_gateway" "main" {
   name                = "${var.prefix}-appgateway"
-  resource_group_name = azurerm_resource_group.main.name
-  location           = azurerm_resource_group.main.location
+  resource_group_name = data.azurerm_resource_group.main.name
+  location           = data.azurerm_resource_group.main.location
 
   sku {
     name     = "Standard_v2"

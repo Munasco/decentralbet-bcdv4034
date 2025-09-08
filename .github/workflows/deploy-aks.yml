@@ -44,20 +44,14 @@ jobs:
       - name: Azure login
         run: az login --identity
 
-      - name: Terraform init
+      - name: Check existing AKS cluster
         run: |
-          cd terraform
-          terraform init
-
-      - name: Terraform plan
-        run: |
-          cd terraform
-          terraform plan -out=tfplan
-
-      - name: Terraform apply
-        run: |
-          cd terraform
-          terraform apply -auto-approve tfplan
+          if az aks show --resource-group ${{ env.RESOURCE_GROUP }} --name ${{ env.CLUSTER_NAME }} --query name -o tsv 2>/dev/null; then
+            echo "AKS cluster exists, skipping terraform"
+          else
+            echo "AKS cluster not found, would need terraform"
+            exit 1
+          fi
 
       - name: Get AKS credentials
         run: |
