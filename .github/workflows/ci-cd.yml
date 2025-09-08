@@ -13,7 +13,6 @@ env:
   NAMESPACE: decentralbet
 
 jobs:
-  # Smart Contract Testing
   smart-contract-tests:
     runs-on: ubuntu-latest
     name: Smart Contract Tests
@@ -51,7 +50,6 @@ jobs:
         file: ./smart-contracts/coverage/lcov.info
         flags: smart-contracts
 
-  # Backend Testing
   backend-tests:
     runs-on: ubuntu-latest
     name: Backend API Tests
@@ -104,7 +102,6 @@ jobs:
         file: ./backend/coverage/lcov.info
         flags: backend
 
-  # Frontend Testing & Build
   frontend-tests:
     runs-on: ubuntu-latest
     name: Frontend Tests & Build
@@ -143,7 +140,6 @@ jobs:
         NEXT_PUBLIC_API_URL: https://api.decentralbet.azurewebsites.net/api/v1
         NEXT_PUBLIC_WS_URL: wss://api.decentralbet.azurewebsites.net
 
-  # Security Scanning
   security-scan:
     runs-on: ubuntu-latest
     name: Security Scan
@@ -167,7 +163,6 @@ jobs:
       with:
         sarif_file: 'trivy-results.sarif'
 
-  # Build and Push Docker Images
   build-and-push:
     runs-on: ubuntu-latest
     name: Build & Push Images
@@ -203,7 +198,6 @@ jobs:
         docker push ${{ env.AZURE_CONTAINER_REGISTRY }}/decentralbet-frontend:${{ github.sha }}
         docker push ${{ env.AZURE_CONTAINER_REGISTRY }}/decentralbet-frontend:latest
 
-  # Deploy to AKS
   deploy-to-aks:
     runs-on: ubuntu-latest
     name: Deploy to AKS
@@ -248,23 +242,18 @@ jobs:
 
     - name: Run smoke tests
       run: |
-        # Wait for ingress to be ready
         sleep 30
-        
-        # Test health endpoints
         kubectl get ingress -n ${{ env.NAMESPACE }}
         
-        # Get external IP and test
         EXTERNAL_IP=$(kubectl get ingress decentralbet-ingress -n ${{ env.NAMESPACE }} -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
         if [ ! -z "$EXTERNAL_IP" ]; then
           curl -f http://$EXTERNAL_IP/api/v1/health || exit 1
-          echo "✅ Backend health check passed"
+          echo "Backend health check passed"
           
           curl -f http://$EXTERNAL_IP/ || exit 1
-          echo "✅ Frontend health check passed"
+          echo "Frontend health check passed"
         fi
 
-  # Notify on success/failure
   notify:
     runs-on: ubuntu-latest
     name: Notify Deployment Status
@@ -275,12 +264,12 @@ jobs:
     - name: Notify on success
       if: needs.deploy-to-aks.result == 'success'
       run: |
-        echo "🚀 Deployment successful!"
+        echo "Deployment successful"
         echo "Application URL: https://decentralbet.azurewebsites.net"
         echo "API URL: https://api.decentralbet.azurewebsites.net"
 
     - name: Notify on failure
       if: needs.deploy-to-aks.result == 'failure'
       run: |
-        echo "❌ Deployment failed!"
+        echo "Deployment failed"
         exit 1

@@ -118,14 +118,14 @@ if (config.nodeEnv === 'production') {
 
 for (const envVar of requiredEnvVars) {
   if (!process.env[envVar]) {
-    console.error(`❌ Required environment variable ${envVar} is missing`);
+    console.error(`Required environment variable ${envVar} is missing`);
     process.exit(1);
   }
 }
 
 // Log configuration in development
 if (config.nodeEnv === 'development') {
-  console.log('📋 Server Configuration:');
+  console.log('Server Configuration:');
   console.log(`   Port: ${config.port}`);
   console.log(`   Environment: ${config.nodeEnv}`);
   console.log(`   Database URI: ${config.database.uri.replace(/\/\/([^:]+):([^@]+)@/, '//$1:***@')}`);

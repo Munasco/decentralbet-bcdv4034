@@ -133,15 +133,15 @@ export default function RealTimeActivityFeed({
   const getActivityIcon = (type: ActivityItem['type']) => {
     switch (type) {
       case 'bet_placed':
-        return <DollarSign className="w-4 h-4 text-green-500" />
+        return <DollarSign className="w-4 h-4 text-success" />
       case 'market_created':
-        return <TrendingUp className="w-4 h-4 text-blue-500" />
+        return <TrendingUp className="w-4 h-4 text-info" />
       case 'market_resolved':
-        return <Activity className="w-4 h-4 text-purple-500" />
+        return <Activity className="w-4 h-4 text-primary" />
       case 'volume_update':
-        return <Users className="w-4 h-4 text-orange-500" />
+        return <Users className="w-4 h-4 text-warning" />
       default:
-        return <Activity className="w-4 h-4 text-gray-500" />
+        return <Activity className="w-4 h-4 text-muted-foreground" />
     }
   }
 
@@ -154,9 +154,9 @@ export default function RealTimeActivityFeed({
             <span className="font-medium">
               {bet.user.username || `${bet.user.walletAddress.slice(0, 6)}...${bet.user.walletAddress.slice(-4)}`}
             </span>
-            <span className="text-gray-600 dark:text-gray-400"> bet </span>
-            <span className="font-medium text-green-600">${formatUSDC(bet.amount)}</span>
-            <span className="text-gray-600 dark:text-gray-400"> on </span>
+            <span className="text-muted-foreground"> bet </span>
+            <span className="font-medium text-success">${formatUSDC(bet.amount)}</span>
+            <span className="text-muted-foreground"> on </span>
             <span className="font-medium">{bet.outcomeDescription}</span>
             <div className="text-sm text-gray-500 dark:text-gray-400 mt-1">
               Market: {bet.market.question.length > 50 ? 
@@ -171,10 +171,10 @@ export default function RealTimeActivityFeed({
         return (
           <div>
             <span className="font-medium">New market created:</span>
-            <div className="font-medium text-blue-600 dark:text-blue-400 mt-1">
+            <div className="font-medium text-info mt-1">
               {market.question}
             </div>
-            <div className="text-sm text-gray-500 dark:text-gray-400">
+            <div className="text-sm text-muted-foreground">
               Category: {market.category} • {market.outcomes.length} outcomes
             </div>
           </div>
@@ -185,10 +185,10 @@ export default function RealTimeActivityFeed({
         return (
           <div>
             <span className="font-medium">Market resolved:</span>
-            <div className="font-medium text-purple-600 dark:text-purple-400 mt-1">
+            <div className="font-medium text-primary mt-1">
               Market #{resolution.marketId}
             </div>
-            <div className="text-sm text-gray-500 dark:text-gray-400">
+            <div className="text-sm text-muted-foreground">
               Winning outcome: #{resolution.winningOutcome}
             </div>
           </div>
@@ -199,10 +199,10 @@ export default function RealTimeActivityFeed({
         return (
           <div>
             <span className="font-medium">Volume updated</span>
-            <div className="font-medium text-orange-600 dark:text-orange-400 mt-1">
+            <div className="font-medium text-warning mt-1">
               Market #{volumeData.marketId}
             </div>
-            <div className="text-sm text-gray-500 dark:text-gray-400">
+            <div className="text-sm text-muted-foreground">
               New volume: ${formatUSDC(volumeData.newVolume)}
             </div>
           </div>
@@ -229,9 +229,9 @@ export default function RealTimeActivityFeed({
   }
 
   return (
-    <div className={`bg-white dark:bg-gray-800 rounded-lg shadow-sm ${className}`}>
+    <div className={`bg-card rounded-lg shadow-sm ${className}`}>
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+      <div className="flex items-center justify-between p-4 border-b border-border">
         <div className="flex items-center">
           <Activity className="w-5 h-5 text-blue-500 mr-2" />
           <h3 className="font-semibold text-gray-900 dark:text-white">

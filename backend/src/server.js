@@ -179,10 +179,10 @@ app.use((error, req, res, next) => {
 
 // Graceful shutdown handler
 const gracefulShutdown = async () => {
-  logger.info('🛑 Graceful shutdown initiated...');
+  logger.info('Graceful shutdown initiated');
   
   server.close(() => {
-    logger.info('🔌 HTTP server closed');
+    logger.info('HTTP server closed');
   });
   
   // Close database connection
@@ -199,7 +199,7 @@ const gracefulShutdown = async () => {
     logger.error('Error cleaning up blockchain service:', error);
   }
   
-  logger.info('👋 Server shutdown complete');
+  logger.info('Server shutdown complete');
   process.exit(0);
 };
 
@@ -225,42 +225,42 @@ const startServer = async () => {
 // Connect to database (optional for caching only)
     try {
       await database.connect();
-      logger.info('📄 Database connected for caching');
+      logger.info('Database connected for caching');
     } catch (error) {
-      logger.warn('⚠️ Database connection failed - continuing without caching:', error.message);
+      logger.warn('Database connection failed - continuing without caching:', error.message);
     }
     
     // Initialize blockchain service (optional, continues if failed)
     try {
       await blockchainService.initialize();
     } catch (error) {
-      logger.warn('⚠️  Blockchain service initialization failed, continuing with limited functionality');
+      logger.warn('Blockchain service initialization failed, continuing with limited functionality');
     }
     
     // Initialize oracle service
     try {
       await oracleService.initialize();
-      logger.info('🔮 Oracle service initialized successfully');
+      logger.info('Oracle service initialized successfully');
     } catch (error) {
-      logger.warn('⚠️  Oracle service initialization failed, continuing with limited functionality');
+      logger.warn('Oracle service initialization failed, continuing with limited functionality');
     }
     
     // Start HTTP server
     server.listen(config.port, () => {
-      logger.info(`🚀 Server started successfully`);
-      logger.info(`📡 HTTP Server: http://localhost:${config.port}`);
-      logger.info(`📊 Environment: ${config.nodeEnv}`);
-      logger.info(`🔌 WebSocket Server: ws://localhost:${config.port}`);
-      logger.info(`📋 Health Check: http://localhost:${config.port}/health`);
-      logger.info(`📋 API Info: http://localhost:${config.port}/api/v1/info`);
+      logger.info('Server started successfully');
+      logger.info(`HTTP Server: http://localhost:${config.port}`);
+      logger.info(`Environment: ${config.nodeEnv}`);
+      logger.info(`WebSocket Server: ws://localhost:${config.port}`);
+      logger.info(`Health Check: http://localhost:${config.port}/health`);
+      logger.info(`API Info: http://localhost:${config.port}/api/v1/info`);
       
       if (config.nodeEnv === 'development') {
-        logger.info('🛠️  Development mode - detailed logs enabled');
+        logger.info('Development mode - detailed logs enabled');
       }
     });
     
   } catch (error) {
-    logger.error('❌ Failed to start server:', error);
+    logger.error('Failed to start server:', error);
     process.exit(1);
   }
 };

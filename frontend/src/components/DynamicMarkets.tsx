@@ -27,7 +27,6 @@ export default function DynamicMarkets() {
         return;
       }
       
-      console.log('🏪 DynamicMarkets: Fetching', marketCount.toString(), 'markets...');
       setIsLoading(true);
       setError(null);
       
@@ -35,19 +34,13 @@ export default function DynamicMarkets() {
         const fetchedMarkets: Market[] = [];
         const count = Number(marketCount);
         
-        // Fetch each market individually (we'll optimize this later)
         for (let i = 1; i <= count; i++) {
-          console.log(`🏪 DynamicMarkets: Fetching market ${i}...`);
-          
-          // For now, we'll create a hook-based component for each market
-          // This is not ideal but will work for debugging
+          // Individual market components handle fetching
         }
         
         setMarkets(fetchedMarkets);
-        console.log('🏪 DynamicMarkets: Successfully loaded', fetchedMarkets.length, 'markets');
         
       } catch (error) {
-        console.error('🏪 DynamicMarkets: Error fetching markets:', error);
         setError('Failed to load markets from blockchain');
       } finally {
         setIsLoading(false);
@@ -75,9 +68,9 @@ export default function DynamicMarkets() {
           <p>Error loading markets: {countError?.message || error}</p>
           <button 
             onClick={() => window.location.reload()}
-            className="mt-4 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg"
+            className="mt-4 bg-info hover:bg-info/90 text-white font-medium py-2 px-4 rounded-lg"
           >
-            🔄 Retry
+            Retry
           </button>
         </div>
       </div>
@@ -92,9 +85,9 @@ export default function DynamicMarkets() {
           <p className="text-sm">Create the first prediction market.</p>
           <button 
             onClick={() => window.open('/create', '_self')}
-            className="mt-4 bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-lg"
+            className="mt-4 bg-success hover:bg-success/90 text-white font-medium py-2 px-4 rounded-lg"
           >
-            🎯 Create First Market
+            Create First Market
           </button>
         </div>
       </div>
@@ -174,7 +167,6 @@ function MarketCard({ marketId }: { marketId: number }) {
       <div className="p-6">
         <div className="flex items-start justify-between mb-4">
           <div className="flex items-center">
-            <span className="text-2xl mr-3">🎯</span>
             <div>
               <span className="px-2 py-1 text-xs font-medium bg-blue-500/20 text-blue-400 rounded-full">
                 {category} • {isResolved ? 'RESOLVED' : 'LIVE'}
@@ -215,9 +207,9 @@ function MarketCard({ marketId }: { marketId: number }) {
           </div>
         </div>
 
-        <div className="flex justify-between text-sm text-gray-300">
+        <div className="flex justify-between text-sm text-muted-foreground">
           <span>Ends {new Date(Number(endTime) * 1000).toLocaleDateString()}</span>
-          <span>🔗 Market #{Number(id)}</span>
+          <span>Market #{Number(id)}</span>
         </div>
       </div>
     </div>
