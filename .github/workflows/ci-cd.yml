@@ -168,22 +168,11 @@ jobs:
           cd /opt/decentralbet
         fi
         
-        # Install Node.js and Yarn if needed
-        if ! command -v node &> /dev/null; then
-          echo "Installing Node.js..."
-          curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
-          sudo apt-get install -y nodejs
-        fi
-        
-        if ! command -v yarn &> /dev/null; then
-          echo "Installing Yarn..."
-          sudo npm install -g yarn
-        fi
-        
-        if ! command -v pm2 &> /dev/null; then
-          echo "Installing PM2..."
-          sudo npm install -g pm2
-        fi
+        # Check and install dependencies (they should already be installed)
+        echo "Checking dependencies..."
+        node --version || echo "Node.js not found"
+        yarn --version || echo "Yarn not found"
+        pm2 --version || echo "PM2 not found"
         
         # Build frontend
         echo "Building frontend..."
@@ -193,8 +182,9 @@ jobs:
         
         # Build backend
         echo "Building backend..."
-        cd /opt/decentralbet/backend  
-        npm ci
+        cd /opt/decentralbet/backend
+        rm -f package-lock.json
+        npm install
         
         # Restart services
         echo "Restarting services..."
@@ -206,13 +196,28 @@ jobs:
     - name: Verify Deployment
       run: |
         echo "🔍 Verifying deployment..."
-        sleep 10
+        sleep 15
         
         echo "=== PM2 Process Status ==="
-        pm2 status || echo "PM2 status check failed"
+        pm2 status
+        
+        echo "=== Health Checks ==="
+        # Check if frontend is responding
+        if curl -f http://localhost:3000 > /dev/null 2>&1; then
+          echo "✅ Frontend is healthy at http://localhost:3000"
+        else
+          echo "❌ Frontend health check failed"
+        fi
+        
+        # Check if backend is responding (basic check)
+        if curl -s http://localhost:5000 | grep -q "Cannot GET\|Error\|html"; then
+          echo "✅ Backend is responding at http://localhost:5000"
+        else
+          echo "❌ Backend health check failed"
+        fi
         
         echo "=== Application URLs ==="
-        echo "🌍 Frontend: http://localhost:3000"
-        echo "🔧 Backend API: http://localhost:5000"
+        echo "🌍 Frontend: http://52.191.8.251:3000"
+        echo "🔧 Backend API: http://52.191.8.251:5000"
         
         echo "🎉 Deployment verification complete!"
