@@ -1,356 +1,69 @@
-name: CI/CD Pipeline - Test and Deploy to AKS
+name: Deploy to AKS with Managed Identity
 
 on:
-  # Disabled - using self-hosted runner deployment instead
-  # push:
-  #   branches: [ main, develop ]
-  # pull_request:
-  #   branches: [ main ]
+  # Manual trigger for AKS deployment or infrastructure changes
+  push:
+    branches: [ develop ]
+    paths: 
+      - 'k8s/**'
+      - 'terraform/**'
   workflow_dispatch: # Allow manual triggering
 
 env:
-  AZURE_CONTAINER_REGISTRY: dbacr1757292120
-  CONTAINER_NAME_FRONTEND: decentralbet-frontend
-  CONTAINER_NAME_BACKEND: decentralbet-backend
   RESOURCE_GROUP: decentralbet-rg
   CLUSTER_NAME: decentralbet-aks
-  NAMESPACE: decentralbet
+  LOCATION: eastus
 
 jobs:
-  # Continuous Integration - Run tests on all branches
-  ci-tests:
-    name: "CI Tests (${{ matrix.component }})"
+  deploy:
     runs-on: self-hosted
-    strategy:
-      fail-fast: false
-      matrix:
-        component: [frontend, backend]
-    
+    environment: production
+
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Set up Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '18'
-        cache: 'npm'
-        cache-dependency-path: ${{ matrix.component }}/package-lock.json
+      - name: Azure CLI Login with Managed Identity
+        run: |
+          az login --identity --client-id 41c6da1d-d60b-429b-a013-c1763411cf05
 
-    - name: Install dependencies
-      run: |
-        cd ${{ matrix.component }}
-        echo "📦 Installing dependencies for ${{ matrix.component }}..."
-        npm ci
-
-    - name: Run ESLint
-      run: |
-        cd ${{ matrix.component }}
-        echo "🔍 Running ESLint for ${{ matrix.component }}..."
-        npm run lint
-      continue-on-error: false
-
-    - name: Run Tests
-      run: |
-        cd ${{ matrix.component }}
-        echo "🧪 Running tests for ${{ matrix.component }}..."
-        npm test -- --watchAll=false --coverage --passWithNoTests
-      continue-on-error: false
-
-    - name: Build Application
-      run: |
-        cd ${{ matrix.component }}
-        echo "🏗️ Building ${{ matrix.component }}..."
-        if [ "${{ matrix.component }}" = "frontend" ]; then
-          npm run build
-        fi
-        echo "✅ ${{ matrix.component }} built successfully"
-
-    - name: Upload test results
-      if: always()
-      run: |
-        echo "📊 Test results for ${{ matrix.component }}: ${{ job.status }}"
-
-  # Security and Code Quality Checks
-  security-scan:
-    name: "Security & Code Quality"
-    runs-on: self-hosted
-    if: github.event_name == 'pull_request'
-    
-    steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
-
-    - name: Run Trivy vulnerability scanner
-      run: |
-        echo "🔒 Running security scan..."
-        # Install trivy if not available
-        if ! command -v trivy &> /dev/null; then
-          curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
-        fi
-        trivy fs . --severity HIGH,CRITICAL || echo "⚠️ Security issues found"
-      continue-on-error: true
-
-  # Continuous Deployment - Only on main branch after CI passes
-  docker-build-push:
-    name: "Build & Push Docker Images"
-    needs: [ci-tests]
-    runs-on: self-hosted
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    
-    strategy:
-      matrix:
-        component: [frontend, backend]
-    
-    steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
-
-    - name: Login to Azure Container Registry
-      run: |
-        echo "🔐 Logging into ACR..."
-        az acr login --name ${{ env.AZURE_CONTAINER_REGISTRY }}
-
-    - name: Build and push image
-      run: |
-        cd ${{ matrix.component }}
-        
-        echo "🏗️ Building ${{ matrix.component }} Docker image..."
-        
-        # Determine container name
-        if [ "${{ matrix.component }}" = "frontend" ]; then
-          CONTAINER_NAME="${{ env.CONTAINER_NAME_FRONTEND }}"
-        else
-          CONTAINER_NAME="${{ env.CONTAINER_NAME_BACKEND }}"
-        fi
-        
-        # Build image with correct platform and tags
-        docker build \
-          --platform linux/amd64 \
-          -t ${{ env.AZURE_CONTAINER_REGISTRY }}.azurecr.io/$CONTAINER_NAME:${{ github.sha }} \
-          -t ${{ env.AZURE_CONTAINER_REGISTRY }}.azurecr.io/$CONTAINER_NAME:latest \
-          .
-        
-        echo "📤 Pushing ${{ matrix.component }} images..."
-        docker push ${{ env.AZURE_CONTAINER_REGISTRY }}.azurecr.io/$CONTAINER_NAME:${{ github.sha }}
-        docker push ${{ env.AZURE_CONTAINER_REGISTRY }}.azurecr.io/$CONTAINER_NAME:latest
-        
-        echo "✅ ${{ matrix.component }} image pushed successfully"
-
-  # Deploy to AKS
-  deploy-to-aks:
-    name: "Deploy to AKS Cluster"
-    needs: [ci-tests, docker-build-push]
-    runs-on: self-hosted
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    
-    steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
-
-    - name: Set up kubectl and get AKS credentials
-      run: |
-        echo "⚙️ Setting up kubectl and AKS credentials..."
-        
-        # Install kubectl if not already available
-        if ! command -v kubectl &> /dev/null; then
-          echo "📦 Installing kubectl..."
-          curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
-          chmod +x kubectl
-          sudo mv kubectl /usr/local/bin/
-        fi
-        
-        # Get AKS credentials
-        echo "🔐 Getting AKS credentials..."
-        az aks get-credentials --resource-group ${{ env.RESOURCE_GROUP }} --name ${{ env.CLUSTER_NAME }} --admin
-        
-        # Verify connection
-        echo "✅ Connected to AKS cluster:"
-        kubectl cluster-info --context ${{ env.CLUSTER_NAME }}-admin
-
-    - name: Update image tags in Kubernetes manifests
-      run: |
-        echo "🏷️ Updating image tags in Kubernetes manifests..."
-        
-        # Update frontend deployment
-        if [ -f "k8s/frontend-deployment.yaml" ]; then
-          sed -i "s|image:.*frontend.*|image: ${{ env.ACR_LOGIN_SERVER }}/frontend:${{ github.sha }}|g" k8s/frontend-deployment.yaml
-          echo "✅ Updated frontend image tag"
-        fi
-        
-        # Update backend deployment
-        if [ -f "k8s/backend-deployment.yaml" ]; then
-          sed -i "s|image:.*backend.*|image: ${{ env.ACR_LOGIN_SERVER }}/backend:${{ github.sha }}|g" k8s/backend-deployment.yaml
-          echo "✅ Updated backend image tag"
-        fi
-        
-        # Show updated manifests
-        echo "📝 Updated manifests:"
-        if [ -f "k8s/frontend-deployment.yaml" ]; then
-          echo "Frontend deployment:"
-          grep "image:" k8s/frontend-deployment.yaml
-        fi
-        if [ -f "k8s/backend-deployment.yaml" ]; then
-          echo "Backend deployment:"
-          grep "image:" k8s/backend-deployment.yaml
-        fi
-
-    - name: Deploy to AKS
-      run: |
-        echo "🚀 Deploying application to AKS..."
-        
-        # Apply all Kubernetes manifests
-        if [ -d "k8s" ]; then
-          echo "📋 Applying Kubernetes manifests..."
-          kubectl apply -f k8s/ --recursive
-          
-          echo "⏳ Waiting for deployments to be ready..."
-          # Wait for frontend deployment
-          if kubectl get deployment frontend > /dev/null 2>&1; then
-            kubectl wait --for=condition=available --timeout=300s deployment/frontend
-            echo "✅ Frontend deployment ready"
+      - name: Create AKS Cluster
+        run: |
+          if ! az aks show --resource-group ${{ env.RESOURCE_GROUP }} --name ${{ env.CLUSTER_NAME }} --query name -o tsv 2>/dev/null; then
+            az aks create \
+              --resource-group ${{ env.RESOURCE_GROUP }} \
+              --name ${{ env.CLUSTER_NAME }} \
+              --node-count 1 \
+              --enable-addons monitoring \
+              --generate-ssh-keys \
+              --location ${{ env.LOCATION }} \
+              --yes
           fi
-          
-          # Wait for backend deployment
-          if kubectl get deployment backend > /dev/null 2>&1; then
-            kubectl wait --for=condition=available --timeout=300s deployment/backend
-            echo "✅ Backend deployment ready"
+
+      - name: Get AKS Credentials
+        run: |
+          az aks get-credentials \
+            --resource-group ${{ env.RESOURCE_GROUP }} \
+            --name ${{ env.CLUSTER_NAME }} \
+            --overwrite-existing
+
+      - name: Deploy to AKS
+        run: |
+          kubectl create namespace blockchain-app --dry-run=client -o yaml | kubectl apply -f -
+          kubectl apply -f k8s/ -n blockchain-app
+          sleep 30
+          kubectl get all -n blockchain-app
+
+          if kubectl get deployment frontend-deployment -n blockchain-app 2>/dev/null; then
+            kubectl wait --for=condition=available --timeout=300s deployment/frontend-deployment -n blockchain-app
           fi
-          
-          echo "📊 Deployment status:"
-          kubectl get deployments
-          kubectl get pods
-          kubectl get services
-        else
-          echo "❌ No k8s directory found. Skipping Kubernetes deployment."
-          exit 1
-        fi
 
-    - name: Run smoke tests
-      run: |
-        echo "🧪 Running smoke tests..."
-        
-        # Get external IP addresses
-        echo "🔍 Getting service endpoints..."
-        kubectl get services
-        
-        # Test frontend service if it exists
-        FRONTEND_IP=$(kubectl get service frontend-service -o jsonpath='{.status.loadBalancer.ingress[0].ip}' 2>/dev/null || echo "")
-        if [ -n "$FRONTEND_IP" ]; then
-          echo "🌐 Testing frontend at http://$FRONTEND_IP"
-          if curl -f -s --max-time 30 "http://$FRONTEND_IP" > /dev/null; then
-            echo "✅ Frontend health check passed"
-          else
-            echo "⚠️ Frontend health check failed"
+          if kubectl get deployment backend-deployment -n blockchain-app 2>/dev/null; then
+            kubectl wait --for=condition=available --timeout=300s deployment/backend-deployment -n blockchain-app
           fi
-        else
-          echo "📝 Frontend service not found or no external IP yet"
-        fi
-        
-        # Test backend service if it exists
-        BACKEND_IP=$(kubectl get service backend-service -o jsonpath='{.status.loadBalancer.ingress[0].ip}' 2>/dev/null || echo "")
-        if [ -n "$BACKEND_IP" ]; then
-          echo "🔗 Testing backend at http://$BACKEND_IP/health"
-          if curl -f -s --max-time 30 "http://$BACKEND_IP/health" > /dev/null; then
-            echo "✅ Backend health check passed"
-          else
-            echo "⚠️ Backend health check failed"
-          fi
-        else
-          echo "📝 Backend service not found or no external IP yet"
-        fi
-        
-        echo "🎉 Deployment completed successfully!"
 
-    - name: Create namespace if not exists
-      run: |
-        kubectl create namespace ${{ env.NAMESPACE }} --dry-run=client -o yaml | kubectl apply -f -
-
-    - name: Update image tags in manifests
-      run: |
-        cd k8s
-        
-        # Update frontend image tag
-        sed -i "s|image: ${{ env.AZURE_CONTAINER_REGISTRY }}.azurecr.io/${{ env.CONTAINER_NAME_FRONTEND }}:.*|image: ${{ env.AZURE_CONTAINER_REGISTRY }}.azurecr.io/${{ env.CONTAINER_NAME_FRONTEND }}:${{ github.sha }}|g" frontend.yaml
-        
-        # Update backend image tag  
-        sed -i "s|image: ${{ env.AZURE_CONTAINER_REGISTRY }}.azurecr.io/${{ env.CONTAINER_NAME_BACKEND }}:.*|image: ${{ env.AZURE_CONTAINER_REGISTRY }}.azurecr.io/${{ env.CONTAINER_NAME_BACKEND }}:${{ github.sha }}|g" backend.yaml
-        
-        # Show updated images
-        echo "Updated image tags:"
-        grep "image:" frontend.yaml backend.yaml
-
-    - name: Deploy to AKS
-      run: |
-        cd k8s
-        
-        # Apply configurations in order
-        kubectl apply -f namespace.yaml
-        kubectl apply -f rbac.yaml
-        kubectl apply -f network-policies.yaml
-        kubectl apply -f backend.yaml
-        kubectl apply -f frontend.yaml
-        kubectl apply -f ingress.yaml
-        
-        # Apply monitoring if exists
-        if [ -d "monitoring" ]; then
-          kubectl apply -f monitoring/
-        fi
-
-    - name: Wait for deployment
-      run: |
-        kubectl rollout status deployment/frontend -n ${{ env.NAMESPACE }} --timeout=300s
-        kubectl rollout status deployment/backend -n ${{ env.NAMESPACE }} --timeout=300s
-
-    - name: Get deployment status
-      run: |
-        kubectl get pods -n ${{ env.NAMESPACE }}
-        kubectl get services -n ${{ env.NAMESPACE }}
-        kubectl get ingress -n ${{ env.NAMESPACE }}
-
-    - name: Run smoke tests
-      run: |
-        # Wait for services to be ready
-        sleep 60
-        
-        # Get ingress IP
-        INGRESS_IP=$(kubectl get ingress decentralbet-ingress -n ${{ env.NAMESPACE }} -o jsonpath='{.status.loadBalancer.ingress[0].ip}' || echo "")
-        
-        if [ -n "$INGRESS_IP" ]; then
-          echo "Testing deployment at IP: $INGRESS_IP"
-          
-          # Test backend health
-          curl -f "http://$INGRESS_IP/health" || echo "❌ Backend health check failed"
-          
-          # Test backend API
-          curl -f "http://$INGRESS_IP/api/debug/portfolios" || echo "❌ Backend API test failed"
-          
-          # Test frontend
-          curl -f "http://$INGRESS_IP/" | grep -q "DecentralBet" && echo "✅ Frontend test passed" || echo "❌ Frontend test failed"
-          
-          echo "✅ Deployment completed successfully!"
-        else
-          echo "⚠️  Ingress IP not available yet, skipping smoke tests"
-        fi
-
-  security-scan:
-    runs-on: self-hosted
-    if: github.event_name == 'pull_request'
-    
-    steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
-
-    - name: Run Trivy vulnerability scanner
-      uses: aquasecurity/trivy-action@master
-      with:
-        scan-type: 'fs'
-        scan-ref: '.'
-        format: 'sarif'
-        output: 'trivy-results.sarif'
-
-    - name: Upload Trivy scan results to GitHub Security tab
-      uses: github/codeql-action/upload-sarif@v2
-      if: always()
-      with:
-        sarif_file: 'trivy-results.sarif'
+      - name: Get Service Status
+        run: |
+          kubectl get all -n blockchain-app
+          kubectl get services -n blockchain-app
+          kubectl get pods -n blockchain-app
